@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HYROX Log — ปฏิทินซ้อม/อาหาร</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#2b1a1f;
+    --bg-alt:#3d2028;
+    --card:#4a2a30;
+    --card-2:#5c333a;
+    --line:#6b414a;
+    --chalk:#fdf1ee;
+    --muted:#c99aa0;
+    --yellow:#ff6f91;
+    --rust:#a8562e;
+    --teal:#d9a441;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0;
+    background:
+      linear-gradient(135deg, var(--bg) 0%, var(--bg-alt) 35%, #7a3b4a 68%, #c2617a 100%);
+    color:var(--chalk);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding-bottom:60px;
+  }
+  .wrap{max-width:840px;margin:0 auto;padding:18px 16px 0;}
+  .display{font-family:'Bebas Neue',sans-serif;letter-spacing:0.03em;}
+  .mono{font-family:'Space Mono',monospace;}
+
+  /* ---------- BIB HERO ---------- */
+  .bib{
+    position:relative;
+    background:var(--chalk);
+    color:#3d1f1a;
+    border-radius:6px;
+    padding:20px 20px 18px;
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(0,0,0,0.35);
+  }
+  .bib::before{
+    content:"";
+    position:absolute;
+    top:-40px; right:-40px;
+    width:140px;height:140px;
+    background:repeating-linear-gradient(45deg, var(--yellow) 0 14px, #3d1f1a 14px 28px);
+    transform:rotate(0deg);
+    opacity:0.9;
+    border-radius:0 0 0 100%;
+  }
+  .bib-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;position:relative;z-index:1;}
+  .bib-label{font-size:11px;letter-spacing:0.18em;text-transform:uppercase;font-weight:700;color:#8a5a52;}
+  .bib-name{font-size:15px;font-weight:700;margin-top:2px;}
+  .bib-number{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:64px;
+    line-height:0.85;
+    letter-spacing:0.02em;
+  }
+  .bib-mid{display:flex;gap:22px;margin-top:14px;flex-wrap:wrap;position:relative;z-index:1;}
+  .bib-stat{min-width:120px;}
+  .bib-stat .n{font-family:'Space Mono',monospace;font-size:26px;font-weight:700;}
+  .bib-stat .l{font-size:10.5px;text-transform:uppercase;letter-spacing:0.12em;color:#8a5a52;margin-top:1px;}
+  .bib-strip{
+    margin-top:16px;
+    height:6px;border-radius:3px;
+    background:#3d1f1a;
+    overflow:hidden;
+    position:relative;z-index:1;
+  }
+  .bib-strip > div{height:100%;background:var(--rust);}
+
+  /* ---------- DATE NAV ---------- */
+  .datenav{
+    display:flex;align-items:center;gap:8px;
+    margin:16px 0 14px;
+  }
+  .datenav button{
+    background:var(--card);border:1px solid var(--line);color:var(--chalk);
+    width:38px;height:38px;border-radius:8px;font-size:16px;cursor:pointer;
+  }
+  .datenav button:focus-visible, .today-btn:focus-visible{outline:2px solid var(--yellow);outline-offset:2px;}
+  .datenav input[type=date]{
+    flex:1;background:var(--card);border:1px solid var(--line);color:var(--chalk);
+    padding:9px 10px;border-radius:8px;font-family:'Space Mono',monospace;font-size:14px;
+  }
+  .today-btn{
+    background:var(--yellow);color:#3d1f1a;border:none;border-radius:8px;
+    padding:9px 12px;font-weight:700;font-size:12.5px;cursor:pointer;letter-spacing:0.02em;
+  }
+
+  /* ---------- DAY HEADER ---------- */
+  .day-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;}
+  .day-head h1{font-family:'Bebas Neue',sans-serif;font-size:34px;margin:0;letter-spacing:0.02em;}
+  .day-head .phase{font-size:12px;color:var(--muted);text-align:right;max-width:180px;line-height:1.3;}
+
+  /* ---------- CARDS ---------- */
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px;
+    margin-top:14px;
+  }
+  .card h2{
+    font-size:12px;text-transform:uppercase;letter-spacing:0.14em;
+    color:var(--yellow);margin:0 0 12px;display:flex;align-items:center;gap:8px;
+  }
+  .item{
+    display:flex;align-items:flex-start;gap:10px;
+    padding:9px 0;border-bottom:1px solid var(--line);
+    font-size:14.5px;line-height:1.4;
+  }
+  .item:last-child{border-bottom:none;}
+  .item input[type=checkbox]{
+    appearance:none;-webkit-appearance:none;
+    width:20px;height:20px;min-width:20px;
+    border:2px solid var(--muted);border-radius:5px;
+    margin-top:1px;cursor:pointer;position:relative;
+  }
+  .item input[type=checkbox]:checked{background:var(--yellow);border-color:var(--yellow);}
+  .item input[type=checkbox]:checked::after{
+    content:"✓";position:absolute;left:2px;top:-3px;color:#3d1f1a;font-size:15px;font-weight:700;
+  }
+  .item input[type=checkbox]:focus-visible{outline:2px solid var(--yellow);outline-offset:2px;}
+  .item span.done{text-decoration:line-through;color:var(--muted);}
+
+  /* ---------- ACTUAL ACTIVITY ---------- */
+  .quickadd-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
+  .quickadd-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .chip{
+    background:transparent;border:1px solid var(--teal);color:var(--teal);
+    border-radius:16px;padding:6px 12px;font-size:12.5px;cursor:pointer;
+  }
+  .chip:disabled{border-color:var(--line);color:var(--line);cursor:default;}
+  .chip:focus-visible{outline:2px solid var(--yellow);}
+  .customadd-row{display:flex;gap:8px;margin-bottom:14px;}
+  .customadd-row input{
+    flex:1;background:var(--bg);border:1px solid var(--line);color:var(--chalk);
+    border-radius:8px;padding:9px 10px;font-size:14px;
+  }
+  .customadd-row input:focus-visible{outline:2px solid var(--yellow);}
+  .customadd-row button{
+    background:var(--yellow);color:#3d1f1a;border:none;border-radius:8px;
+    padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;
+  }
+  .exercise-card{
+    background:var(--card-2);border:1px solid var(--line);border-radius:8px;
+    padding:12px;margin-top:10px;
+  }
+  .exercise-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .exercise-card-head .ex-name{font-weight:700;font-size:14.5px;}
+  .ex-remove{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;padding:2px 6px;}
+  .ex-remove:hover{color:var(--rust);}
+  .set-row{display:flex;align-items:center;gap:8px;padding:5px 0;}
+  .set-row .set-idx{
+    font-family:'Space Mono',monospace;font-size:11.5px;color:var(--muted);
+    width:24px;text-align:center;
+  }
+  .set-row input{
+    background:var(--bg);border:1px solid var(--line);color:var(--chalk);
+    border-radius:6px;padding:7px 8px;font-family:'Space Mono',monospace;font-size:13.5px;
+    width:72px;text-align:center;
+  }
+  .set-row input:focus-visible{outline:2px solid var(--yellow);}
+  .set-row .unit{font-size:11px;color:var(--muted);}
+  .set-row .set-remove{background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:2px 4px;}
+  .set-row .set-remove:hover{color:var(--rust);}
+  .add-set-btn{
+    background:none;border:1px dashed var(--line);color:var(--muted);
+    border-radius:6px;padding:6px 10px;font-size:12px;cursor:pointer;margin-top:6px;
+  }
+  .add-set-btn:hover{border-color:var(--teal);color:var(--teal);}
+  .empty-hint{color:var(--muted);font-size:13px;font-style:italic;padding:6px 0;}
+
+  /* ---------- PERIODIZATION ---------- */
+  .phase-row{
+    border-left:3px solid var(--line); padding:8px 0 8px 12px; margin-bottom:4px;
+  }
+  .phase-row.current{border-left-color:var(--yellow);}
+  .phase-row .ph-top{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .phase-row .ph-name{font-weight:700; font-size:14px;}
+  .phase-row.current .ph-name{color:var(--yellow);}
+  .phase-row .ph-dates{font-family:'Space Mono',monospace; font-size:11px; color:var(--muted); white-space:nowrap;}
+  .phase-row .ph-desc{font-size:12.5px; color:var(--muted); line-height:1.4; margin-top:3px;}
+  .phase-row .ph-tag{
+    display:inline-block; font-size:9.5px; text-transform:uppercase; letter-spacing:0.08em;
+    background:var(--yellow); color:#3d1f1a; padding:2px 7px; border-radius:4px; font-weight:700; margin-left:8px;
+  }
+
+  /* ---------- WEEKLY LOAD PROGRESSION ---------- */
+  .load-block-label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);font-weight:700;margin-bottom:8px;}
+  .week-row{border-left:3px solid var(--line);padding:7px 0 7px 12px;margin-bottom:2px;}
+  .week-row.current-week{border-left-color:var(--rust);}
+  .week-row .wk-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;}
+  .week-row .wk-label{font-weight:700;font-size:13.5px;}
+  .week-row.current-week .wk-label{color:var(--rust);}
+  .week-row .wk-range{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--muted);}
+  .week-row .wk-load{
+    font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--teal);
+  }
+  .week-row .wk-note{font-size:12px;color:var(--muted);line-height:1.4;margin-top:2px;}
+  .sim-format-box{
+    margin-top:14px;background:var(--bg);border:1px dashed var(--yellow);border-radius:8px;padding:10px 12px;
+  }
+  .sim-format-title{font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:5px;}
+  .sim-format-text{font-size:12px;color:var(--chalk);line-height:1.5;}
+
+  /* ---------- DASHBOARD ---------- */
+  .dash-phase-bar{
+    position:relative; display:flex; height:22px; border-radius:5px; overflow:hidden;
+    background:var(--bg); border:1px solid var(--line);
+  }
+  .dash-phase-seg{height:100%; position:relative;}
+  .dash-phase-seg.base{background:#d9a441;}
+  .dash-phase-seg.build{background:#ff6f91;}
+  .dash-phase-seg.peak{background:#a8562e;}
+  .dash-phase-seg.taper{background:#8a5a63;}
+  .dash-today-marker{
+    position:absolute; top:-4px; width:2px; height:30px; background:var(--chalk);
+  }
+  .dash-today-marker::after{
+    content:"▲"; position:absolute; bottom:-14px; left:50%; transform:translateX(-50%);
+    font-size:9px; color:var(--chalk);
+  }
+  .dash-phase-legend{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; font-size:10.5px; color:var(--muted);}
+  .dash-phase-legend .leg-item{display:flex; align-items:center; gap:5px;}
+  .dash-phase-legend .leg-dot{width:8px;height:8px;border-radius:2px;}
+
+  .bar-chart-row{display:flex; align-items:flex-end; gap:8px; height:90px; padding-top:6px;}
+  .bar-col{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;}
+  .bar-col .bar-track{width:100%; max-width:26px; height:64px; background:var(--bg); border-radius:4px; display:flex; align-items:flex-end; overflow:hidden;}
+  .bar-col .bar-fill{width:100%; border-radius:4px 4px 0 0; transition:height 0.2s;}
+  .bar-col .bar-daylabel{font-size:10px; color:var(--muted); margin-top:5px;}
+  .bar-col .bar-pctlabel{font-family:'Space Mono',monospace; font-size:9.5px; color:var(--chalk); margin-bottom:3px;}
+
+  .sparkline-wrap{margin-top:8px;}
+  .sparkline-wrap svg{width:100%; height:auto; display:block;}
+  .sparkline-empty{color:var(--muted); font-size:12.5px; font-style:italic;}
+
+  /* ---------- PROFILE SETUP ---------- */
+  .profile-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .profile-toggle{
+    background:transparent;border:1px solid var(--teal);color:var(--teal);
+    border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;white-space:nowrap;
+  }
+  .profile-toggle:hover{background:var(--teal);color:#3d1f1a;}
+  .profile-hint{font-size:12px;color:var(--muted);line-height:1.5;}
+  .profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:12px;}
+  .profile-field{display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--muted);}
+  .profile-field input, .profile-field textarea{
+    background:var(--bg);border:1px solid var(--line);color:var(--chalk);
+    border-radius:8px;padding:8px 9px;font-size:13.5px;font-family:'Space Mono',monospace;
+  }
+  .profile-field textarea{font-family:'Inter',sans-serif;font-size:13px;resize:vertical;}
+  .profile-save-btn{
+    margin-top:14px;background:var(--yellow);color:#3d1f1a;border:none;border-radius:8px;
+    padding:10px 16px;font-weight:700;font-size:13px;cursor:pointer;width:100%;
+  }
+
+
+  .food-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);align-items:flex-start;}
+  .food-row:last-child{border-bottom:none;}
+  .food-row input[type=checkbox]{appearance:none;-webkit-appearance:none;width:20px;height:20px;min-width:20px;border:2px solid var(--muted);border-radius:5px;margin-top:2px;cursor:pointer;position:relative;}
+  .food-row input[type=checkbox]:checked{background:var(--teal);border-color:var(--teal);}
+  .food-row input[type=checkbox]:checked::after{content:"✓";position:absolute;left:2px;top:-3px;color:#3d1f1a;font-size:15px;font-weight:700;}
+  .food-row .meal{font-size:10.5px;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);min-width:88px;margin-top:2px;}
+  .food-row .desc{font-size:14.5px;line-height:1.4;}
+  .food-row .desc.done{text-decoration:line-through;color:var(--muted);}
+
+  /* ---------- WATER GAUGE ---------- */
+  .water-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .water-goal{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;}
+  .water-note{font-size:11.5px;color:var(--rust);font-weight:600;}
+  .glasses{display:flex;flex-wrap:wrap;gap:8px;}
+  .glass{
+    width:26px;height:34px;border:2px solid var(--muted);border-radius:2px 2px 6px 6px;
+    cursor:pointer;position:relative;background:transparent;
+    clip-path:polygon(15% 0,85% 0,100% 100%,0 100%);
+  }
+  .glass.filled{background:var(--teal);border-color:var(--teal);}
+  .glass:focus-visible{outline:2px solid var(--yellow);outline-offset:3px;}
+
+  /* ---------- NOTE ---------- */
+  .energy-row{display:flex;gap:6px;margin-bottom:10px;}
+  .energy-btn{
+    width:34px;height:34px;border-radius:50%;border:2px solid var(--line);
+    background:transparent;color:var(--chalk);font-family:'Space Mono',monospace;font-weight:700;cursor:pointer;
+  }
+  .energy-btn.active{background:var(--yellow);color:#3d1f1a;border-color:var(--yellow);}
+  textarea{
+    width:100%;min-height:64px;background:var(--bg);border:1px solid var(--line);
+    border-radius:8px;color:var(--chalk);padding:10px;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;
+  }
+  textarea:focus-visible{outline:2px solid var(--yellow);}
+
+  /* ---------- WEEKLY SCOREBOARD ---------- */
+  .score-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .score-table th{
+    text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:0.08em;
+    color:var(--muted);padding:6px 6px;border-bottom:1px solid var(--line);font-weight:600;
+  }
+  .score-table td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top;}
+  .score-table tr:last-child td{border-bottom:none;}
+  .metric-name{font-weight:600;}
+  .score-table input{
+    width:64px;background:var(--bg);border:1px solid var(--line);color:var(--chalk);
+    border-radius:6px;padding:5px 6px;font-family:'Space Mono',monospace;font-size:12.5px;
+  }
+  .score-table input:focus-visible{outline:2px solid var(--yellow);}
+  .hint{color:var(--muted);font-size:11.5px;line-height:1.4;}
+  .baseline{font-family:'Space Mono',monospace;color:var(--muted);}
+
+  .notes-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
+  .notes-list li{
+    font-size:13px;line-height:1.5;padding-left:14px;position:relative;color:var(--chalk);
+  }
+  .notes-list li::before{
+    content:"";position:absolute;left:0;top:6px;width:6px;height:6px;background:var(--yellow);border-radius:1px;
+  }
+
+  .reset-wrap{text-align:center;margin-top:22px;}
+  .reset-btn{
+    background:transparent;border:1px solid var(--line);color:var(--muted);
+    padding:9px 16px;border-radius:8px;font-size:12px;cursor:pointer;
+  }
+  .reset-btn:hover{color:var(--rust);border-color:var(--rust);}
+
+  @media (max-width:480px){
+    .bib-number{font-size:52px;}
+    .day-head h1{font-size:28px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- BIB HERO -->
+  <div class="bib">
+    <div class="bib-top">
+      <div>
+        <div class="bib-label">Hyrox Open Women</div>
+        <div class="bib-name" id="bibName">แข่งวันอาทิตย์ 15 พ.ย. 2026</div>
+      </div>
+      <div class="bib-number" id="bibDays">—</div>
+    </div>
+    <div class="bib-mid">
+      <div class="bib-stat">
+        <div class="n" id="statRaceDays">—</div>
+        <div class="l">วันสู่วันแข่ง</div>
+      </div>
+      <div class="bib-stat">
+        <div class="n" id="statBirthdayDays">—</div>
+        <div class="l" id="statBirthdayLabel">วันสู่วันเกิด</div>
+      </div>
+      <div class="bib-stat">
+        <div class="n" id="statPhase">BASE</div>
+        <div class="l">เฟสซ้อมปัจจุบัน</div>
+      </div>
+    </div>
+    <div class="bib-strip"><div id="bibProgress" style="width:0%"></div></div>
+    <div class="phase-hint" id="phaseHint" style="margin-top:8px;font-size:11px;color:#8a6169;line-height:1.4;"></div>
+  </div>
+
+  <div id="saveWarning" style="display:none;background:#4a2620;border:1px solid #a8562e;color:#fdf1ee;font-size:12px;padding:8px 12px;border-radius:8px;margin-top:14px;line-height:1.5;">
+    ⚠️ บันทึกข้อมูลไม่สำเร็จ — เบราว์เซอร์อาจปิดการใช้งานพื้นที่จัดเก็บข้อมูล (เช่น โหมดส่วนตัว/Private mode) ลองเปิดหน้านี้แบบปกติแทน
+  </div>
+
+  <!-- PROFILE SETUP -->
+  <div class="card">
+    <div class="profile-head" id="profileHead">
+      <h2 style="margin:0;">👤 ข้อมูลส่วนตัว &amp; ค่าฐานสุขภาพ</h2>
+      <button class="profile-toggle" id="profileToggle" type="button">แก้ไข</button>
+    </div>
+    <div class="profile-hint" id="profileHint">ไฟล์นี้ไม่มีข้อมูลส่วนตัวติดมาด้วย — กรอกของคุณเองที่นี่ครั้งเดียว ข้อมูลจะถูกบันทึกไว้ในเครื่อง/บัญชีนี้เท่านั้น ไม่ติดไปกับซอร์สโค้ดที่แชร์หรืออัปโหลดที่ไหน</div>
+    <div id="profileForm" style="display:none;">
+      <div class="profile-grid">
+        <label class="profile-field">
+          <span>วันเกิด</span>
+          <input type="date" id="pfBirthday">
+        </label>
+        <label class="profile-field">
+          <span>วันที่สแกนล่าสุด</span>
+          <input type="date" id="pfScanDate">
+        </label>
+      </div>
+      <div class="profile-grid">
+        <label class="profile-field"><span>น้ำหนัก (กก.)</span><input type="number" step="0.1" id="pfWeight"></label>
+        <label class="profile-field"><span>กล้ามเนื้อ (กก.)</span><input type="number" step="0.1" id="pfMuscle"></label>
+        <label class="profile-field"><span>ไขมัน (กก.)</span><input type="number" step="0.1" id="pfFat"></label>
+        <label class="profile-field"><span>Boditrax Score</span><input type="number" step="1" id="pfBoditrax"></label>
+        <label class="profile-field"><span>Leg Muscle Score</span><input type="number" step="1" id="pfLeg"></label>
+        <label class="profile-field"><span>โปรตีน (%)</span><input type="number" step="0.1" id="pfProtein"></label>
+        <label class="profile-field"><span>TDEE (kcal)</span><input type="number" step="1" id="pfTdee"></label>
+      </div>
+      <label class="profile-field" style="margin-top:8px;">
+        <span>หมายเหตุจากผลสแกน / คำแนะนำที่ได้รับ (ไม่บังคับ — ขึ้นบรรทัดใหม่แยกแต่ละข้อ)</span>
+        <textarea id="pfNotes" rows="4" placeholder="เช่น มวลกระดูกลดลง 0.5 กก. ควรเน้นแคลเซียม+วิตามินดี..."></textarea>
+      </label>
+      <button class="profile-save-btn" id="profileSave" type="button">บันทึกข้อมูลส่วนตัว</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="card">
+    <h2>📊 แดชบอร์ดความคืบหน้าไปวันแข่ง</h2>
+
+    <div class="load-block-label">เส้นทางเฟส</div>
+    <div class="dash-phase-bar" id="dashPhaseBar"></div>
+    <div class="dash-phase-legend" id="dashPhaseLegend"></div>
+
+    <div class="load-block-label" style="margin-top:16px;">ความสม่ำเสมอซ้อม+อาหาร 7 วันล่าสุด</div>
+    <div class="bar-chart-row" id="dashConsistencyChart"></div>
+
+    <div class="load-block-label" style="margin-top:16px;">น้ำ 7 วันล่าสุด (เทียบเป้าหมาย)</div>
+    <div class="bar-chart-row" id="dashWaterChart"></div>
+
+    <div class="load-block-label" style="margin-top:16px;">แนวโน้มน้ำหนัก (จากตารางติดตามรายสัปดาห์)</div>
+    <div class="sparkline-wrap" id="dashWeightSpark"></div>
+  </div>
+
+  <!-- DATE NAV -->
+  <div class="datenav">
+    <button id="prevDay" aria-label="วันก่อนหน้า">‹</button>
+    <input type="date" id="datePick">
+    <button id="nextDay" aria-label="วันถัดไป">›</button>
+    <button class="today-btn" id="gotoToday">วันนี้</button>
+  </div>
+
+  <div class="day-head">
+    <h1 id="dayTitle">—</h1>
+    <div class="phase" id="phaseNote">เฟสพื้นฐาน (Base Phase) — ปรับความหนักตามสัปดาห์ที่ระบุในตารางซ้อมหลัก</div>
+  </div>
+
+  <!-- WORKOUT PLAN -->
+  <div class="card">
+    <h2>🏋️ แผนการซ้อม (Plan)</h2>
+    <div id="workoutList"></div>
+  </div>
+
+  <!-- ACTUAL ACTIVITY -->
+  <div class="card">
+    <h2>💪 กิจกรรมจริง (Actual Activity)</h2>
+    <div class="quickadd-label">เพิ่มจากแผนวันนี้:</div>
+    <div class="quickadd-row" id="quickAddRow"></div>
+    <div class="customadd-row">
+      <input type="text" id="customExerciseName" placeholder="พิมพ์ชื่อท่า/กิจกรรมเอง...">
+      <button id="customExerciseAdd">+ เพิ่ม</button>
+    </div>
+    <div id="actualList"></div>
+  </div>
+
+  <!-- FOOD -->
+  <div class="card">
+    <h2>🍽️ ตารางอาหาร</h2>
+    <div id="foodList"></div>
+  </div>
+
+  <!-- WATER -->
+  <div class="card">
+    <h2>💧 เป้าหมายน้ำวันนี้</h2>
+    <div class="water-top">
+      <div class="water-goal" id="waterGoalText">— ลิตร</div>
+      <div class="water-note" id="waterNote"></div>
+    </div>
+    <div class="glasses" id="glassRow"></div>
+  </div>
+
+  <!-- NOTE -->
+  <div class="card">
+    <h2>📝 บันทึกวันนี้</h2>
+    <div class="energy-row" id="energyRow"></div>
+    <textarea id="noteBox" placeholder="ความรู้สึกวันนี้ พลังงาน ความเมื่อยล้า ฯลฯ"></textarea>
+  </div>
+
+  <!-- PERIODIZATION -->
+  <div class="card">
+    <h2>🗓️ แผนระยะยาว (Base → Build → Peak → Taper)</h2>
+    <div id="periodizationList"></div>
+  </div>
+
+  <!-- WEEKLY LOAD PROGRESSION -->
+  <div class="card">
+    <h2>📈 แนวทางเพิ่มความหนักรายสัปดาห์ — Build &amp; Peak</h2>
+    <div class="load-block-label">BUILD PHASE (16 ก.ย. – 20 ต.ค.)</div>
+    <div id="buildWeeksList"></div>
+    <div class="load-block-label" style="margin-top:14px;">PEAK PHASE (21 ต.ค. – 3 พ.ย.)</div>
+    <div id="peakWeeksList"></div>
+    <div class="sim-format-box">
+      <div class="sim-format-title">🏁 รูปแบบจำลองแข่ง (ใช้วันพุธ+เสาร์ในเฟส Peak)</div>
+      <div class="sim-format-text">วิ่ง 1 กม. สลับสเตชั่น 8 รอบตามลำดับจริงของ HYROX: SkiErg 1000m → Sled Push → Sled Pull → Burpee Broad Jump → Rowing 1000m → Farmers Carry → Sandbag Lunge → Wall Balls — จับเวลารวมทุกครั้งเพื่อเทียบพัฒนาการ</div>
+    </div>
+  </div>
+
+  <!-- WEEKLY SCOREBOARD -->
+  <div class="card">
+    <h2 id="scoreboardTitle">📊 ติดตามผลรายสัปดาห์ — เทียบกับผลสแกนล่าสุด</h2>
+    <table class="score-table">
+      <thead>
+        <tr><th>ตัวชี้วัด</th><th>ล่าสุด</th><th>สัปดาห์นี้</th><th>ควรปรับอะไร</th></tr>
+      </thead>
+      <tbody id="scoreBody"></tbody>
+    </table>
+  </div>
+
+  <!-- COACH NOTES -->
+  <div class="card">
+    <h2>🩺 หมายเหตุจากผลสแกนล่าสุด</h2>
+    <ul class="notes-list" id="coachNotesList"></ul>
+  </div>
+
+  <div class="reset-wrap">
+    <button class="reset-btn" id="resetDay">ล้างข้อมูลของวันนี้</button>
+  </div>
+
+</div>
+
+<script>
+/* ---------------- DATA ---------------- */
+const RACE_DATE = new Date(2026,10,15); // 15 Nov 2026
+
+/* ---- PROFILE: all personal data lives here, entered by the user and stored locally only ---- */
+let PROFILE = {
+  birthday: '',
+  scanDate: '',
+  metrics: { weight:'', muscle:'', fat:'', boditrax:'', leg:'', protein:'', tdee:'' },
+  notes: ''
+};
+
+async function loadProfile(){
+  try{
+    const raw = await storageGetSafe('profile');
+    if(raw){
+      const parsed = JSON.parse(raw);
+      PROFILE = Object.assign({}, PROFILE, parsed, { metrics: Object.assign({}, PROFILE.metrics, parsed.metrics||{}) });
+    }
+  }catch(e){ /* keep defaults */ }
+}
+async function saveProfile(){
+  await storageSetWithRetry('profile', JSON.stringify(PROFILE));
+}
+
+const PHASES = [
+  { key:'base',  label:'BASE',  thLabel:'เฟสพื้นฐาน (Base)',        start:'2026-07-22', end:'2026-09-15',
+    desc:'สร้างฐานแอโรบิกและรูปแบบการเคลื่อนไหว น้ำหนักที่ยกเบา-ปานกลาง คงที่ เน้นความสม่ำเสมอ' },
+  { key:'build', label:'BUILD', thLabel:'เฟสเพิ่มความหนัก (Build)', start:'2026-09-16', end:'2026-10-20',
+    desc:'เพิ่มน้ำหนัก/ความเข้มข้นทีละน้อยทุกสัปดาห์ เพิ่มฝึกเทคนิคสเตชั่นที่ Hyrox Engine เป็น 2 ครั้ง/สัปดาห์' },
+  { key:'peak',  label:'PEAK',  thLabel:'เฟสจำลองแข่ง (Peak)',      start:'2026-10-21', end:'2026-11-03',
+    desc:'จำลองการแข่งเต็มรูปแบบ (วิ่งสลับสเตชั่นภายใต้ความเหนื่อยล้า) ความหนักสูงสุด เริ่มลดปริมาณรวมเล็กน้อย' },
+  { key:'taper', label:'TAPER', thLabel:'เฟสลดปริมาณ (Taper)',      start:'2026-11-04', end:'2026-11-14',
+    desc:'ลดปริมาณลง 40-60% แต่รักษาความเข้มข้นไว้ เน้นนอนหลับ โภชนาการ และผ่อนคลายกล้ามเนื้อ' },
+  { key:'race',  label:'RACE',  thLabel:'วันแข่งขัน!',              start:'2026-11-15', end:'2026-11-15',
+    desc:'วันแข่งจริง เชื่อใจการซ้อมที่ผ่านมา สู้ๆ!' }
+];
+
+function getPhase(date){
+  const iso = isoDate(date);
+  for(const p of PHASES){ if(iso>=p.start && iso<=p.end) return p; }
+  if(iso > PHASES[PHASES.length-1].end){
+    return { key:'post', label:'DONE', thLabel:'หลังแข่งขัน', desc:'พักฟื้นและวางแผนเป้าหมายถัดไป — เก่งมาก!' };
+  }
+  return PHASES[0];
+}
+
+const BUILD_WEEKS = [
+  { range:'16-22 ก.ย.', start:'2026-09-16', end:'2026-09-22', label:'Build W1', load:'+5% จาก Base',
+    note:'เริ่มเพิ่ม Hyrox Engine เป็น 2 วัน/สัปดาห์ (อ.+พ.) เน้นฟอร์มก่อนเพิ่มน้ำหนัก' },
+  { range:'23-29 ก.ย.', start:'2026-09-23', end:'2026-09-29', label:'Build W2', load:'+10% จาก Base',
+    note:'เพิ่มน้ำหนัก squat/lunge/farmers carry อีก ~5% จากสัปดาห์ก่อน' },
+  { range:'30 ก.ย.-6 ต.ค.', start:'2026-09-30', end:'2026-10-06', label:'Build W3', load:'+15% จาก Base',
+    note:'หนักที่สุดของบล็อกแรก วิ่งยาวศุกร์เริ่มแทรกจังหวะเร็วขึ้น' },
+  { range:'7-13 ต.ค.', start:'2026-10-07', end:'2026-10-13', label:'Build W4 · Deload', load:'ลดเหลือ ~85%',
+    note:'สัปดาห์พักฟื้น ลดปริมาณ 20-30% แต่คงความเข้มไว้ เตรียมร่างกายก่อนดันหนักสัปดาห์สุดท้าย' },
+  { range:'14-20 ต.ค.', start:'2026-10-14', end:'2026-10-20', label:'Build W5', load:'+20% จาก Base',
+    note:'จุดสูงสุดของเฟส Build — หนักที่สุดก่อนเข้า Peak' }
+];
+
+const PEAK_WEEKS = [
+  { range:'21-27 ต.ค.', start:'2026-10-21', end:'2026-10-27', label:'Peak W1', load:'~90% ของจุดสูงสุด Build',
+    note:'เริ่มจำลองแข่งเต็มรูปแบบ (พุธ+เสาร์) ลดปริมาณรวมลงเล็กน้อยแต่คงความหนัก' },
+  { range:'28 ต.ค.-3 พ.ย.', start:'2026-10-28', end:'2026-11-03', label:'Peak W2', load:'~75-80%',
+    note:'สัปดาห์ซ้อมใหญ่สุดท้าย — Sim เสาร์คือ dress rehearsal เต็มรูปแบบ จำลองวันแข่งจริงทุกอย่าง (เวลาตื่น/มื้ออาหาร/วอร์มอัพ) หลังจากนี้เข้า Taper ทันที' }
+];
+
+function renderWeekList(elId, weeks){
+  const el = document.getElementById(elId);
+  el.innerHTML = '';
+  const todayIso = isoDate(new Date());
+  weeks.forEach(w=>{
+    const isCurrent = todayIso>=w.start && todayIso<=w.end;
+    const row = document.createElement('div');
+    row.className = 'week-row'+(isCurrent?' current-week':'');
+    row.innerHTML = `
+      <div class="wk-top">
+        <span class="wk-label">${w.label}${isCurrent?' 👈':''}</span>
+        <span class="wk-range">${w.range}</span>
+        <span class="wk-load">${w.load}</span>
+      </div>
+      <div class="wk-note">${w.note}</div>`;
+    el.appendChild(row);
+  });
+}
+
+/* ---------------- DASHBOARD ---------------- */
+function renderDashPhaseBar(){
+  const bar = document.getElementById('dashPhaseBar');
+  const legend = document.getElementById('dashPhaseLegend');
+  if(!bar || !legend) return;
+  bar.innerHTML = '';
+  legend.innerHTML = '';
+
+  const spanStart = new Date(PHASES[0].start+'T00:00:00');
+  const spanEnd = new Date(PHASES[PHASES.length-1].end+'T00:00:00');
+  const totalDays = Math.max(1, daysBetween(spanStart, spanEnd) + 1);
+
+  PHASES.forEach(p=>{
+    const pStart = new Date(p.start+'T00:00:00');
+    const pEnd = new Date(p.end+'T00:00:00');
+    const segDays = daysBetween(pStart, pEnd) + 1;
+    const pct = (segDays/totalDays)*100;
+    const seg = document.createElement('div');
+    seg.className = 'dash-phase-seg '+p.key;
+    seg.style.width = pct.toFixed(2)+'%';
+    bar.appendChild(seg);
+
+    const leg = document.createElement('div');
+    leg.className = 'leg-item';
+    leg.innerHTML = `<span class="leg-dot dash-phase-seg ${p.key}" style="width:8px;height:8px;"></span><span>${p.thLabel.split(' ')[0]}</span>`;
+    legend.appendChild(leg);
+  });
+
+  const today = new Date();
+  const todayOffset = Math.min(totalDays, Math.max(0, daysBetween(spanStart, today)));
+  const markerPct = (todayOffset/totalDays)*100;
+  const marker = document.createElement('div');
+  marker.className = 'dash-today-marker';
+  marker.style.left = `calc(${markerPct.toFixed(2)}% - 1px)`;
+  bar.appendChild(marker);
+}
+
+async function getDayStatsFor(date){
+  const phase = getPhase(date);
+  const t = getTemplatesForPhase(phase.key)[date.getDay()];
+  const totalItems = t.workout.length + t.food.length;
+  const raw = await storageGetSafe('day:'+isoDate(date));
+  if(!raw) return { pct:0, waterRatio:0, hasData:false, glassesGoal:t.glasses };
+  let saved;
+  try{ saved = JSON.parse(raw); }catch(e){ return { pct:0, waterRatio:0, hasData:false, glassesGoal:t.glasses }; }
+  const checked = (saved.workout||[]).filter(Boolean).length + (saved.food||[]).filter(Boolean).length;
+  const pct = totalItems>0 ? Math.round((checked/totalItems)*100) : 0;
+  const waterRatio = t.glasses>0 ? Math.min(1, (saved.water||0)/t.glasses) : 0;
+  return { pct, waterRatio, hasData:true, glassesGoal:t.glasses, waterCount:saved.water||0 };
+}
+
+async function renderDashBarCharts(){
+  const consistencyEl = document.getElementById('dashConsistencyChart');
+  const waterEl = document.getElementById('dashWaterChart');
+  if(!consistencyEl || !waterEl) return;
+  consistencyEl.innerHTML = '';
+  waterEl.innerHTML = '';
+
+  const dayAbbrev = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  const today = new Date();
+  const days = [];
+  for(let i=6;i>=0;i--){
+    const d = new Date(today);
+    d.setDate(d.getDate()-i);
+    days.push(d);
+  }
+
+  for(const d of days){
+    const stats = await getDayStatsFor(d);
+    const isToday = isoDate(d)===isoDate(today);
+
+    const col1 = document.createElement('div');
+    col1.className = 'bar-col';
+    const barColor = stats.pct>=80 ? 'var(--teal)' : (stats.pct>=40 ? 'var(--yellow)' : 'var(--rust)');
+    col1.innerHTML = `
+      <div class="bar-pctlabel">${stats.hasData ? stats.pct+'%' : '–'}</div>
+      <div class="bar-track"><div class="bar-fill" style="height:${stats.hasData?stats.pct:0}%;background:${barColor};"></div></div>
+      <div class="bar-daylabel">${dayAbbrev[d.getDay()]}${isToday?' •':''}</div>`;
+    consistencyEl.appendChild(col1);
+
+    const col2 = document.createElement('div');
+    col2.className = 'bar-col';
+    const waterPct = Math.round(stats.waterRatio*100);
+    const waterColor = waterPct>=100 ? 'var(--teal)' : (waterPct>=50 ? '#c2617a' : 'var(--rust)');
+    col2.innerHTML = `
+      <div class="bar-pctlabel">${stats.hasData ? (stats.waterCount||0)+'/'+stats.glassesGoal : '–'}</div>
+      <div class="bar-track"><div class="bar-fill" style="height:${waterPct}%;background:${waterColor};"></div></div>
+      <div class="bar-daylabel">${dayAbbrev[d.getDay()]}${isToday?' •':''}</div>`;
+    waterEl.appendChild(col2);
+  }
+}
+
+async function renderWeightSparkline(){
+  const el = document.getElementById('dashWeightSpark');
+  if(!el) return;
+  el.innerHTML = '';
+
+  const baselineWeight = parseFloat(PROFILE.metrics.weight);
+  const baselineLabel = PROFILE.scanDate
+    ? new Date(PROFILE.scanDate+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short'})
+    : 'ค่าฐาน';
+  const points = isNaN(baselineWeight) ? [] : [{ label:baselineLabel, value: baselineWeight }];
+  const today = new Date();
+  let monday = new Date(mondayOf(today)+'T00:00:00');
+  const mondaysToCheck = [];
+  for(let i=9;i>=0;i--){
+    const d = new Date(monday);
+    d.setDate(d.getDate() - i*7);
+    mondaysToCheck.push(d);
+  }
+  for(const m of mondaysToCheck){
+    const raw = await storageGetSafe('weekly:'+isoDate(m));
+    if(!raw) continue;
+    try{
+      const data = JSON.parse(raw);
+      if(data.weight && !isNaN(parseFloat(data.weight))){
+        const dLabel = m.toLocaleDateString('th-TH',{day:'numeric',month:'short'});
+        points.push({ label:dLabel, value: parseFloat(data.weight) });
+      }
+    }catch(e){}
+  }
+
+  if(points.length<2){
+    el.innerHTML = '<div class="sparkline-empty">ยังไม่มีข้อมูลน้ำหนักสัปดาห์นี้เพียงพอสำหรับกราฟ — กรอกในตารางติดตามผลด้านล่างทุกสัปดาห์เพื่อดูแนวโน้ม</div>';
+    return;
+  }
+
+  const w = 300, h = 90, padX = 12, padY = 14;
+  const values = points.map(p=>p.value);
+  const minV = Math.min(...values), maxV = Math.max(...values);
+  const range = (maxV-minV) || 1;
+  const stepX = (w - padX*2) / (points.length-1);
+
+  const coords = points.map((p,i)=>{
+    const x = padX + i*stepX;
+    const y = padY + (h - padY*2) * (1 - (p.value-minV)/range);
+    return {x,y,...p};
+  });
+
+  const pathD = coords.map((c,i)=> (i===0?'M':'L')+c.x.toFixed(1)+','+c.y.toFixed(1)).join(' ');
+  const dots = coords.map(c=>`<circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3" fill="#ff6f91"/>`).join('');
+  const firstLast = [coords[0], coords[coords.length-1]];
+  const labels = firstLast.map(c=>`<text x="${c.x.toFixed(1)}" y="${h-2}" font-size="9" fill="#c99aa0" text-anchor="${c===coords[0]?'start':'end'}" font-family="Space Mono, monospace">${c.label}</text>`).join('');
+  const valueLabels = coords.map(c=>`<text x="${c.x.toFixed(1)}" y="${(c.y-6).toFixed(1)}" font-size="9" fill="#fdf1ee" text-anchor="middle" font-family="Space Mono, monospace">${c.value}</text>`).join('');
+
+  el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+    <path d="${pathD}" fill="none" stroke="#d9a441" stroke-width="2"/>
+    ${dots}
+    ${valueLabels}
+    ${labels}
+  </svg>`;
+}
+
+async function renderDashboard(){
+  renderDashPhaseBar();
+  await renderDashBarCharts();
+  await renderWeightSparkline();
+}
+
+
+
+const TEMPLATES = {
+  0: { // Sunday
+    thName:"อาทิตย์", tag:"Day 7",
+    workout:["อบอุ่นร่างกาย 5-10 นาที","วิ่งฟื้นฟู (เช้า) 5-10 กม. จังหวะช้า คุยได้ตลอด","ยืดเหยียด/โฟมโรลทั้งตัว","พักผ่อนที่เหลือของวัน"],
+    food:[["เช้า","ไข่เจียว 3 ฟอง + นมจืด"],["กลางวัน","ข้าวหน้าเป็ด/ไก่"],["ของว่าง","ถั่วอบ + โยเกิร์ต"],["เย็น","ต้มจืดเต้าหู้ไข่ + เนื้อสัตว์ + ข้าว"]],
+    waterL:2.6, glasses:10, waterNote:"วันวิ่งฟื้นฟู"
+  },
+  1:{ thName:"จันทร์", tag:"Day 1",
+    workout:["อบอุ่นร่างกาย 10 นาที (jumping jack/แกว่งแขน-ขา)","Squat ที่บ้าน (ถือขวดน้ำ/ดัมเบลถ้ามี) 3x15","Push-up (เข่าหรือเต็มตัวตามไหว) 3x10-12","Glute Bridge / Hip Hinge 3x15","Plank 3x30-45 วิ","ยืดเหยียด/คูลดาวน์"],
+    food:[["เช้า","ไข่ต้ม 3 ฟอง + นมโปรตีน"],["กลางวัน","ข้าวมันไก่ (เนื้อไก่เยอะ)"],["ของว่าง/หลังซ้อม","กรีกโยเกิร์ต + กล้วย"],["เย็น","อกไก่ย่าง + ข้าว + ผัก"]],
+    waterL:2.5, glasses:10, waterNote:""
+  },
+  2:{ thName:"อังคาร", tag:"Day 2",
+    workout:["อบอุ่นร่างกาย 10 นาที","Interval ที่บ้าน: High Knees 40 วิ / พัก 20 วิ x8 รอบ","Mountain Climbers 3x30 วิ","Core: Russian Twist หรือ Bicycle Crunch 3x15/ข้าง","ยืดเหยียด/คูลดาวน์"],
+    food:[["เช้า","ข้าวต้มไก่ + ไข่ดาว"],["กลางวัน","ข้าวหน้าปลาแซลมอน"],["ของว่าง/หลังซ้อม","นมโปรตีนกล่อง"],["เย็น","ต้มยำกุ้ง + ข้าว"]],
+    waterL:2.5, glasses:10, waterNote:""
+  },
+  3:{ thName:"พุธ", tag:"Day 3",
+    workout:["อบอุ่นร่างกาย 10 นาที","Lunges (ถือขวดน้ำ/ดัมเบลถ้ามี) 3x10-12/ข้าง","Step-up ใช้บันได/ม้านั่งมั่นคง 3x10-12/ข้าง","Farmers Carry ใช้ถุงช้อปปิ้ง/ขวดน้ำหนักๆ เดิน 30-40 ม. x4 เที่ยว","Side Plank 3x20-30 วิ/ข้าง","ยืดเหยียด/คูลดาวน์"],
+    food:[["เช้า","แซนวิชอกไก่ + นมจืด"],["กลางวัน","ข้าวกะเพราไก่ไข่ดาว"],["ของว่าง/หลังซ้อม","ไข่ต้ม 2 ฟอง + ถั่วอบ"],["เย็น","ปลาย่าง + ข้าว + ผักลวก"]],
+    waterL:2.5, glasses:10, waterNote:""
+  },
+  4:{ thName:"พฤหัสบดี", tag:"Day 4",
+    workout:["Active recovery: เดินเร็ว 20-30 นาที","โยคะ/ยืดเหยียดทั้งตัว 10-15 นาที","พักเตรียมตัวก่อนวิ่งยาวคืนวันศุกร์"],
+    food:[["เช้า","โยเกิร์ต + กราโนล่า + นมถั่วเหลือง"],["กลางวัน","ข้าวหมูทอดกระเทียม (เนื้อเยอะ)"],["ของว่าง/หลังซ้อม","นมโปรตีนกล่อง"],["เย็น","ยำวุ้นเส้นไก่/กุ้ง"]],
+    waterL:2.2, glasses:9, waterNote:"วันพักเบา"
+  },
+  5:{ thName:"ศุกร์", tag:"Day 5",
+    workout:["อบอุ่นร่างกาย 10 นาที","วิ่งยาว (เย็น) 10 กม. จังหวะสบาย","ยืดเหยียด/คูลดาวน์หลังวิ่ง"],
+    food:[["เช้า","ไข่ต้ม 3 ฟอง + ขนมปังโฮลวีท"],["กลางวัน","ข้าวหน้าอกไก่ทอด"],["ของว่าง/ก่อนวิ่งเย็น","กล้วย + กรีกโยเกิร์ต"],["เย็นหลังวิ่ง","แกงส้มปลา/กุ้ง + ข้าว"]],
+    waterL:2.8, glasses:11, waterNote:"วันวิ่งยาวตอนเย็น"
+  },
+  6:{ thName:"เสาร์", tag:"Day 6",
+    workout:["อบอุ่นร่างกาย 10-15 นาที","วิ่ง (เช้า) 10 กม. จังหวะปานกลาง","ยืดเหยียด/โฟมโรลหลังวิ่งเช้า","16:00-16:50 น. — HYROX Sim @ Fitness First Hyrox Engine","คูลดาวน์/ยืดเหยียดหลัง Sim"],
+    food:[["เช้าก่อนวิ่ง","ข้าวต้มปลา"],["กลางวัน","ข้าวคลุกกะปิ + ไข่ดาว + เนื้อสัตว์เพิ่ม"],["ของว่างก่อน Sim (~14:30)","กล้วย + นมโปรตีนกล่อง"],["เย็นหลัง Sim","สุกี้น้ำใส + เนื้อสัตว์เยอะ"]],
+    waterL:3.3, glasses:13, waterNote:"วันซ้อมหนักที่สุด — วิ่ง + Hyrox Sim"
+  }
+};
+
+// ---- BUILD PHASE (16 ก.ย. - 20 ต.ค.): เพิ่มน้ำหนัก/ความเข้มข้น + เพิ่ม Hyrox Engine เป็น 2 วัน/สัปดาห์ ----
+const BUILD_TEMPLATES = {
+  0:{ thName:"อาทิตย์", tag:"Day 7 · Build",
+    workout:["อบอุ่นร่างกาย 5-10 นาที","วิ่งฟื้นฟู (เช้า) 6-10 กม. จังหวะช้า","ยืดเหยียด/โฟมโรลทั้งตัว","พักผ่อนที่เหลือของวัน"],
+    food:TEMPLATES[0].food, waterL:2.7, glasses:11, waterNote:"วันวิ่งฟื้นฟู"
+  },
+  1:{ thName:"จันทร์", tag:"Day 1 · Build",
+    workout:["อบอุ่นร่างกาย 10 นาที","Squat ถือน้ำหนักเพิ่มจากสัปดาห์ก่อน 5-10% 3x12-15","Push-up เพิ่มความยาก (ยกเท้าสูง/ช้าลง) 3x12-15","Glute Bridge ถือน้ำหนัก 3x15","Plank เพิ่มเวลา 3x45-60 วิ","ยืดเหยียด/คูลดาวน์"],
+    food:TEMPLATES[1].food, waterL:2.7, glasses:11, waterNote:""
+  },
+  2:{ thName:"อังคาร", tag:"Day 2 · Build",
+    workout:["อบอุ่นร่างกาย 10 นาที","Hyrox Engine — SkiErg 6x300m (พัก 75 วิ)","Hyrox Engine — Rower 6x300m (พัก 75 วิ)","Core: Plank/Dead bug หนักขึ้น 3 เซ็ต","ยืดเหยียดกล้ามเนื้อที่ใช้"],
+    food:TEMPLATES[2].food, waterL:2.8, glasses:11, waterNote:"เพิ่มเป็น Hyrox Engine วันที่ 2 ของสัปดาห์"
+  },
+  3:{ thName:"พุธ", tag:"Day 3 · Build",
+    workout:["อบอุ่นร่างกาย 10 นาที","Lunges ถือน้ำหนักเพิ่มขึ้น 3x12/ข้าง","Step-up เพิ่มความสูง/น้ำหนัก 3x12/ข้าง","Farmers Carry น้ำหนักเพิ่มขึ้น เดิน 40-50 ม. x5 เที่ยว","Side Plank 3x30-40 วิ/ข้าง","ยืดเหยียด/คูลดาวน์"],
+    food:TEMPLATES[3].food, waterL:2.7, glasses:11, waterNote:""
+  },
+  4:{ thName:"พฤหัสบดี", tag:"Day 4 · Build",
+    workout:["Active recovery: เดินเร็ว 20-30 นาที","โยคะ/ยืดเหยียดทั้งตัว 10-15 นาที","พักเตรียมตัวก่อนวิ่งยาวคืนวันศุกร์"],
+    food:TEMPLATES[4].food, waterL:2.3, glasses:9, waterNote:"วันพักเบา"
+  },
+  5:{ thName:"ศุกร์", tag:"Day 5 · Build",
+    workout:["อบอุ่นร่างกาย 10 นาที","วิ่งยาว (เย็น) 10 กม. — 2 กม.สุดท้ายเร่งจังหวะเร็วขึ้นเล็กน้อย","ยืดเหยียด/คูลดาวน์หลังวิ่ง"],
+    food:TEMPLATES[5].food, waterL:2.9, glasses:12, waterNote:"วันวิ่งยาว + แทรกจังหวะเร็ว"
+  },
+  6:{ thName:"เสาร์", tag:"Day 6 · Build",
+    workout:["อบอุ่นร่างกาย 10-15 นาที","วิ่ง (เช้า) 10 กม. จังหวะปานกลาง-เร็ว","ยืดเหยียด/โฟมโรลหลังวิ่งเช้า","16:00-16:50 น. — HYROX Sim @ Fitness First (ใช้น้ำหนักสเตชั่นหนักขึ้นตามระดับยิม)","คูลดาวน์/ยืดเหยียดหลัง Sim"],
+    food:TEMPLATES[6].food, waterL:3.4, glasses:14, waterNote:"วันซ้อมหนักที่สุด — วิ่ง + Hyrox Sim (น้ำหนักเพิ่มขึ้น)"
+  }
+};
+
+// ---- PEAK PHASE (21 ต.ค. - 3 พ.ย.): จำลองแข่งเต็มรูปแบบ ความหนักสูงสุด เริ่มลดปริมาณรวม ----
+const PEAK_TEMPLATES = {
+  0:{ thName:"อาทิตย์", tag:"Day 7 · Peak",
+    workout:["เดินเบาๆ/ยืดเหยียด 15-20 นาที หรือพักเต็มที่","เน้นพักฟื้นให้เต็มที่"],
+    food:TEMPLATES[0].food, waterL:2.4, glasses:10, waterNote:"วันพักฟื้นหลัง Sim ใหญ่"
+  },
+  1:{ thName:"จันทร์", tag:"Day 1 · Peak",
+    workout:["อบอุ่นร่างกาย 10 นาที","Power Set: Jump Squat 3x8","Explosive Push-up (หรือ Push-up เร็ว) 3x8","Glute Bridge เบาๆ เน้นฟอร์ม 3x12","Plank 3x30-45 วิ (ลดจากสัปดาห์ก่อนเล็กน้อย)","ยืดเหยียด/คูลดาวน์"],
+    food:TEMPLATES[1].food, waterL:2.6, glasses:10, waterNote:"เน้นความเร็ว/พลัง ลดปริมาณรวม"
+  },
+  2:{ thName:"อังคาร", tag:"Day 2 · Peak",
+    workout:["อบอุ่นร่างกาย 10 นาที","Brick ที่บ้าน: วิ่งเบา/เดินเร็ว 15 นาที","Circuit จำลองความเหนื่อยล้า 3 รอบ: Burpee x10, Mountain Climber 30 วิ, Squat Jump x10","ยืดเหยียด/คูลดาวน์"],
+    food:TEMPLATES[2].food, waterL:2.7, glasses:11, waterNote:"จำลองความเหนื่อยล้าแบบแข่งจริง"
+  },
+  3:{ thName:"พุธ", tag:"Day 3 · Peak",
+    workout:["อบอุ่นร่างกาย 10 นาที","Hyrox Engine — จำลอง 4 สเตชั่นต่อเนื่องแบบจับเวลา (Sled, SkiErg, Wall Ball, Farmers Carry)","คูลดาวน์/ยืดเหยียดให้ทั่ว"],
+    food:TEMPLATES[3].food, waterL:2.8, glasses:11, waterNote:"ซ้อมจับเวลาสเตชั่นต่อเนื่อง"
+  },
+  4:{ thName:"พฤหัสบดี", tag:"Day 4 · Peak",
+    workout:["พักเต็มที่ หรือเดินเบาๆ 15-20 นาที","ยืดเหยียดเบามาก"],
+    food:TEMPLATES[4].food, waterL:2.2, glasses:9, waterNote:"วันพักก่อนวิ่งยาว"
+  },
+  5:{ thName:"ศุกร์", tag:"Day 5 · Peak",
+    workout:["อบอุ่นร่างกาย 10 นาที","วิ่ง (เย็น) 6-8 กม. — แทรกช่วงจังหวะเท่าการแข่งจริง 2x1 กม.","ยืดเหยียด/คูลดาวน์"],
+    food:TEMPLATES[5].food, waterL:2.6, glasses:10, waterNote:"ลดระยะวิ่งยาวลง เน้นจังหวะแข่งแทน"
+  },
+  6:{ thName:"เสาร์", tag:"Day 6 · Peak",
+    workout:["อบอุ่นร่างกาย 10 นาที","วิ่ง (เช้า) 5-6 กม. เบาๆ เก็บแรงไว้","พักผ่อน/ยืดเหยียดช่วงบ่าย","16:00-16:50 น. — HYROX Sim เต็มรูปแบบ (ซ้อมใหญ่จำลองวันแข่งจริง)","คูลดาวน์เต็มที่หลัง Sim"],
+    food:TEMPLATES[6].food, waterL:3.2, glasses:13, waterNote:"วัน Sim ใหญ่ที่สุดของเฟส Peak — ซ้อมเหมือนวันแข่งจริง"
+  }
+};
+
+// ---- TAPER PHASE (4 พ.ย. - 14 พ.ย.): ลดปริมาณ 40-60% รักษาความเข้ม เน้นนอน+โภชนาการ ----
+const TAPER_TEMPLATES = {
+  0:{ thName:"อาทิตย์", tag:"Day 7 · Taper",
+    workout:["พักเต็มที่ หรือเดินเล่นเบาๆ ถ้าอยากขยับตัว"],
+    food:TEMPLATES[0].food, waterL:2.2, glasses:9, waterNote:"วันพัก"
+  },
+  1:{ thName:"จันทร์", tag:"Day 1 · Taper",
+    workout:["อบอุ่นร่างกาย 5 นาที","ทบทวนฟอร์ม Squat/Push/Pull เบาๆ 15 นาที (ไม่เน้นหนัก)","ยืดเหยียด"],
+    food:TEMPLATES[1].food, waterL:2.3, glasses:9, waterNote:"เบามาก เน้นฟอร์ม"
+  },
+  2:{ thName:"อังคาร", tag:"Day 2 · Taper",
+    workout:["เดินเบาๆ/ยืดเหยียดทั้งตัว 15-20 นาที","เน้นผ่อนคลายกล้ามเนื้อ"],
+    food:TEMPLATES[2].food, waterL:2.2, glasses:9, waterNote:""
+  },
+  3:{ thName:"พุธ", tag:"Day 3 · Taper",
+    workout:["อบอุ่นร่างกาย 5 นาที","Hyrox Engine — ทบทวนเทคนิคเบาๆ 15-20 นาที (Sled/Wall Ball น้ำหนักเบา ไม่จับเวลา)","ยืดเหยียด"],
+    food:TEMPLATES[3].food, waterL:2.3, glasses:9, waterNote:"แตะเทคนิคเบาๆ ไม่ลงแรงเต็มที่"
+  },
+  4:{ thName:"พฤหัสบดี", tag:"Day 4 · Taper",
+    workout:["พักเต็มที่","ยืดเหยียดเบาๆ ถ้าต้องการ"],
+    food:TEMPLATES[4].food, waterL:2.2, glasses:9, waterNote:"วันพัก"
+  },
+  5:{ thName:"ศุกร์", tag:"Day 5 · Taper",
+    workout:["อบอุ่นร่างกาย 5 นาที","วิ่งเบามาก 3-5 กม. แค่ให้ขารู้สึกสด ไม่เน้นจังหวะ","ยืดเหยียด"],
+    food:TEMPLATES[5].food, waterL:2.4, glasses:10, waterNote:"วิ่งสั้นมาก รักษาความรู้สึกของขา"
+  },
+  6:{ thName:"เสาร์", tag:"Day 6 · Taper",
+    workout:["เดิน/จ๊อกเบามาก 15-20 นาที","ยืดเหยียดทั่วตัว","พักผ่อนเต็มที่ช่วงที่เหลือของวัน — ถ้าใกล้วันแข่งมาก (2-3 วันสุดท้าย) ให้พักเต็มที่แทนได้เลย"],
+    food:TEMPLATES[6].food, waterL:2.6, glasses:10, waterNote:"เบามาก เตรียมพร้อมสำหรับวันแข่ง"
+  }
+};
+
+function getTemplatesForPhase(phaseKey){
+  if(phaseKey==='build') return BUILD_TEMPLATES;
+  if(phaseKey==='peak') return PEAK_TEMPLATES;
+  if(phaseKey==='taper') return TAPER_TEMPLATES;
+  return TEMPLATES; // base, race, post -> fall back to base plan
+}
+
+
+const METRICS = [
+  {key:"weight", name:"น้ำหนัก (กก.)", hint:"ถ้าลดเร็วกว่า 0.5 กก./สัปดาห์ → เพิ่มพลังงานรวม"},
+  {key:"muscle", name:"กล้ามเนื้อ (กก.)", hint:"ถ้าไม่ขึ้นใน 2-3 สัปดาห์ → เพิ่มโปรตีน/น้ำหนักที่ยกในยิม"},
+  {key:"fat", name:"ไขมัน (กก.)", hint:"ถ้าเพิ่มต่อเนื่อง → ทบทวนปริมาณแคลอรี่รวมต่อวัน"},
+  {key:"boditrax", name:"Boditrax Score", hint:"ถ้าลดลง → เช็คการนอน/ความเหนื่อยล้าสะสม ลดความหนักชั่วคราว"},
+  {key:"leg", name:"Leg Muscle Score", hint:"ถ้าลดลง → เพิ่มงาน squat/lunge/step-up ในยิม"},
+  {key:"protein", name:"โปรตีน (%)", hint:"เป้าหมาย: เพิ่มขึ้นเรื่อยๆ ด้วยมื้อโปรตีนสม่ำเสมอ"}
+];
+
+/* ---------------- STATE / STORAGE ---------------- */
+let currentDate = new Date();
+let dayState = null; // { workout:[bool], food:[bool], energy:number|null, note:string, water:number }
+
+let saveWarningShown = false;
+function showSaveWarning(){
+  if(saveWarningShown) return;
+  saveWarningShown = true;
+  const el = document.getElementById('saveWarning');
+  if(!el) return;
+  el.style.display = 'block';
+}
+
+function isoDate(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function mondayOf(d){
+  const dt = new Date(d);
+  const wd = dt.getDay(); // 0 sun .. 6 sat
+  const diff = (wd===0?-6:1-wd);
+  dt.setDate(dt.getDate()+diff);
+  return isoDate(dt);
+}
+
+async function storageSetWithRetry(key, value){
+  try{
+    localStorage.setItem('hyrox:'+key, value);
+    return true;
+  }catch(e){
+    console.error('localStorage set failed', key, e);
+    return false;
+  }
+}
+async function storageGetSafe(key){
+  try{
+    return localStorage.getItem('hyrox:'+key);
+  }catch(e){
+    return null;
+  }
+}
+
+async function loadDay(dateStr, template){
+  let saved = null;
+  try{
+    const raw = await storageGetSafe('day:'+dateStr);
+    saved = raw ? JSON.parse(raw) : null;
+  }catch(e){ saved = null; }
+  if(saved){
+    dayState = saved;
+    if(!Array.isArray(dayState.actualLog)) dayState.actualLog = [];
+  }else{
+    dayState = {
+      workout: template.workout.map(()=>false),
+      food: template.food.map(()=>false),
+      energy: null,
+      note: "",
+      water: 0,
+      actualLog: [] // [{id, name, sets:[{reps:'', weight:''}]}]
+    };
+  }
+}
+let dashRefreshTimer = null;
+function scheduleDashRefresh(){
+  clearTimeout(dashRefreshTimer);
+  dashRefreshTimer = setTimeout(()=>{ renderDashboard(); }, 600);
+}
+
+async function saveDay(dateStr){
+  const ok = await storageSetWithRetry('day:'+dateStr, JSON.stringify(dayState));
+  if(!ok) showSaveWarning();
+  scheduleDashRefresh();
+}
+
+let weeklyState = {}; // { weight:'', muscle:'', ... }
+async function loadWeekly(weekKey){
+  try{
+    const raw = await storageGetSafe('weekly:'+weekKey);
+    weeklyState = raw ? JSON.parse(raw) : {};
+  }catch(e){ weeklyState = {}; }
+}
+async function saveWeekly(weekKey){
+  const ok = await storageSetWithRetry('weekly:'+weekKey, JSON.stringify(weeklyState));
+  if(!ok) showSaveWarning();
+  scheduleDashRefresh();
+}
+
+/* ---------------- RENDER ---------------- */
+function daysBetween(a,b){
+  const MS=24*60*60*1000;
+  return Math.round((new Date(b.getFullYear(),b.getMonth(),b.getDate()) - new Date(a.getFullYear(),a.getMonth(),a.getDate()))/MS);
+}
+
+function renderHero(){
+  const today = new Date();
+  const raceDiff = daysBetween(today, RACE_DATE);
+  document.getElementById('bibDays').textContent = raceDiff>=0 ? raceDiff : "0";
+  document.getElementById('statRaceDays').textContent = raceDiff>=0 ? raceDiff : "แข่งแล้ว";
+
+  if(PROFILE.birthday){
+    const bday = new Date(PROFILE.birthday+'T00:00:00');
+    const nextBday = new Date(today.getFullYear(), bday.getMonth(), bday.getDate());
+    if(nextBday < today) nextBday.setFullYear(today.getFullYear()+1);
+    const bdayDiff = daysBetween(today, nextBday);
+    document.getElementById('statBirthdayDays').textContent = bdayDiff;
+    document.getElementById('statBirthdayLabel').textContent = 'วันสู่วันเกิด';
+    const bdayFmt = bday.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+    document.getElementById('bibName').textContent = `เกิด ${bdayFmt} · แข่งวันอาทิตย์ 15 พ.ย. 2026`;
+  } else {
+    document.getElementById('statBirthdayDays').textContent = '—';
+    document.getElementById('statBirthdayLabel').textContent = 'วันเกิด (ยังไม่ตั้งค่า)';
+    document.getElementById('bibName').textContent = 'แข่งวันอาทิตย์ 15 พ.ย. 2026';
+  }
+
+  // progress: assume 16-week (112 day) build window ending at race day
+  const totalWindow = 112;
+  const elapsed = totalWindow - raceDiff;
+  const pct = Math.max(0, Math.min(100, (elapsed/totalWindow)*100));
+  document.getElementById('bibProgress').style.width = pct.toFixed(0)+'%';
+
+  const phase = getPhase(today);
+  document.getElementById('statPhase').textContent = phase.label;
+  document.getElementById('phaseHint').textContent = `${phase.thLabel} — ${phase.desc}`;
+
+  const scoreboardTitle = document.getElementById('scoreboardTitle');
+  if(scoreboardTitle){
+    scoreboardTitle.textContent = PROFILE.scanDate
+      ? `📊 ติดตามผลรายสัปดาห์ — เทียบกับผลสแกนล่าสุด (${new Date(PROFILE.scanDate+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'})})`
+      : `📊 ติดตามผลรายสัปดาห์ — เทียบกับผลสแกนล่าสุด`;
+  }
+
+  renderCoachNotes();
+}
+
+function renderCoachNotes(){
+  const list = document.getElementById('coachNotesList');
+  if(!list) return;
+  list.innerHTML = '';
+  const lines = (PROFILE.notes||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  if(lines.length===0){
+    list.innerHTML = '<li class="empty-hint" style="padding-left:0;">ยังไม่มีหมายเหตุ — เพิ่มได้ในการ์ด "ข้อมูลส่วนตัว &amp; ค่าฐานสุขภาพ" ด้านบน</li>';
+    return;
+  }
+  lines.forEach(line=>{
+    const li = document.createElement('li');
+    li.textContent = line;
+    list.appendChild(li);
+  });
+}
+
+function renderPeriodization(){
+  const el = document.getElementById('periodizationList');
+  el.innerHTML = '';
+  const todayIso = isoDate(new Date());
+  PHASES.forEach(p=>{
+    const isCurrent = todayIso>=p.start && todayIso<=p.end;
+    const row = document.createElement('div');
+    row.className = 'phase-row'+(isCurrent?' current':'');
+    const startFmt = new Date(p.start+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+    const endFmt = new Date(p.end+'T00:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'});
+    row.innerHTML = `
+      <div class="ph-top">
+        <span class="ph-name">${p.thLabel}${isCurrent?'<span class="ph-tag">ตอนนี้</span>':''}</span>
+        <span class="ph-dates">${startFmt} – ${endFmt}</span>
+      </div>
+      <div class="ph-desc">${p.desc}</div>`;
+    el.appendChild(row);
+  });
+}
+
+function genId(){ return 'ex'+Date.now()+Math.random().toString(36).slice(2,7); }
+
+function addExercise(name){
+  name = name.trim();
+  if(!name) return;
+  dayState.actualLog.push({ id:genId(), name, sets:[{reps:'', weight:''}] });
+  saveDay(isoDate(currentDate));
+  renderActual(currentTemplate);
+}
+
+function renderActual(t){
+  const quickAddRow = document.getElementById('quickAddRow');
+  quickAddRow.innerHTML = '';
+  t.workout.forEach(name=>{
+    const already = dayState.actualLog.some(ex=>ex.name===name);
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.type = 'button';
+    btn.textContent = (already?'✓ ':'+ ') + name;
+    btn.disabled = already;
+    btn.addEventListener('click', ()=>addExercise(name));
+    quickAddRow.appendChild(btn);
+  });
+
+  const customInput = document.getElementById('customExerciseName');
+  const customBtn = document.getElementById('customExerciseAdd');
+  customBtn.onclick = ()=>{
+    addExercise(customInput.value);
+    customInput.value = '';
+    customInput.focus();
+  };
+  customInput.onkeydown = e=>{ if(e.key==='Enter'){ e.preventDefault(); customBtn.click(); } };
+
+  renderActualList();
+}
+
+function renderActualList(){
+  const list = document.getElementById('actualList');
+  list.innerHTML = '';
+  if(dayState.actualLog.length===0){
+    list.innerHTML = '<div class="empty-hint">ยังไม่ได้บันทึกกิจกรรมจริงวันนี้ — กดเพิ่มจากแผนด้านบน หรือพิมพ์ชื่อท่าเอง</div>';
+    return;
+  }
+  dayState.actualLog.forEach(ex=>{
+    const card = document.createElement('div');
+    card.className = 'exercise-card';
+
+    const head = document.createElement('div');
+    head.className = 'exercise-card-head';
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'ex-name';
+    nameSpan.textContent = ex.name;
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'ex-remove';
+    removeBtn.type = 'button';
+    removeBtn.setAttribute('aria-label', 'ลบท่านี้');
+    removeBtn.textContent = '✕';
+    removeBtn.addEventListener('click', ()=>{
+      dayState.actualLog = dayState.actualLog.filter(e=>e.id!==ex.id);
+      saveDay(isoDate(currentDate));
+      renderActual(currentTemplate);
+    });
+    head.appendChild(nameSpan);
+    head.appendChild(removeBtn);
+    card.appendChild(head);
+
+    ex.sets.forEach((s,si)=>{
+      const row = document.createElement('div');
+      row.className = 'set-row';
+
+      const idx = document.createElement('span');
+      idx.className = 'set-idx';
+      idx.textContent = '#'+(si+1);
+      row.appendChild(idx);
+
+      const repsInput = document.createElement('input');
+      repsInput.type = 'number'; repsInput.inputMode='numeric'; repsInput.min='0';
+      repsInput.placeholder = 'ครั้ง'; repsInput.value = s.reps;
+      repsInput.addEventListener('input', e=>{ s.reps = e.target.value; saveDay(isoDate(currentDate)); });
+      row.appendChild(repsInput);
+
+      const repsUnit = document.createElement('span');
+      repsUnit.className = 'unit'; repsUnit.textContent = 'ครั้ง';
+      row.appendChild(repsUnit);
+
+      const weightInput = document.createElement('input');
+      weightInput.type = 'number'; weightInput.inputMode='decimal'; weightInput.min='0'; weightInput.step='0.5';
+      weightInput.placeholder = 'กก.'; weightInput.value = s.weight;
+      weightInput.addEventListener('input', e=>{ s.weight = e.target.value; saveDay(isoDate(currentDate)); });
+      row.appendChild(weightInput);
+
+      const weightUnit = document.createElement('span');
+      weightUnit.className = 'unit'; weightUnit.textContent = 'กก.';
+      row.appendChild(weightUnit);
+
+      if(ex.sets.length>1){
+        const rm = document.createElement('button');
+        rm.className = 'set-remove'; rm.type='button';
+        rm.textContent = '–';
+        rm.setAttribute('aria-label','ลบเซ็ตนี้');
+        rm.addEventListener('click', ()=>{
+          ex.sets = ex.sets.filter((_,idx2)=>idx2!==si);
+          saveDay(isoDate(currentDate));
+          renderActualList();
+        });
+        row.appendChild(rm);
+      }
+      card.appendChild(row);
+    });
+
+    const addSetBtn = document.createElement('button');
+    addSetBtn.className = 'add-set-btn'; addSetBtn.type='button';
+    addSetBtn.textContent = '+ เพิ่มเซ็ต';
+    addSetBtn.addEventListener('click', ()=>{
+      ex.sets.push({reps:'', weight:''});
+      saveDay(isoDate(currentDate));
+      renderActualList();
+    });
+    card.appendChild(addSetBtn);
+
+    list.appendChild(card);
+  });
+}
+
+let currentTemplate = null;
+
+function renderDay(){
+  const dow = currentDate.getDay();
+  const viewedPhase = getPhase(currentDate);
+  const activeTemplates = getTemplatesForPhase(viewedPhase.key);
+  const t = activeTemplates[dow];
+  currentTemplate = t;
+  document.getElementById('dayTitle').textContent = `${t.thName} (${t.tag})`;
+
+  document.getElementById('phaseNote').textContent = `${viewedPhase.thLabel} — ${viewedPhase.desc}`;
+
+  const workoutList = document.getElementById('workoutList');
+  workoutList.innerHTML = '';
+  t.workout.forEach((w,i)=>{
+    const row = document.createElement('label');
+    row.className='item';
+    row.innerHTML = `<input type="checkbox" ${dayState.workout[i]?'checked':''}> <span class="${dayState.workout[i]?'done':''}">${w}</span>`;
+    row.querySelector('input').addEventListener('change', e=>{
+      dayState.workout[i] = e.target.checked;
+      row.querySelector('span').className = e.target.checked?'done':'';
+      saveDay(isoDate(currentDate));
+    });
+    workoutList.appendChild(row);
+  });
+
+  renderActual(t);
+
+
+  const foodList = document.getElementById('foodList');
+  foodList.innerHTML = '';
+  t.food.forEach(([meal,desc],i)=>{
+    const row = document.createElement('label');
+    row.className='food-row';
+    row.innerHTML = `<input type="checkbox" ${dayState.food[i]?'checked':''}>
+      <span class="meal">${meal}</span>
+      <span class="desc ${dayState.food[i]?'done':''}">${desc}</span>`;
+    row.querySelector('input').addEventListener('change', e=>{
+      dayState.food[i] = e.target.checked;
+      row.querySelector('.desc').className = 'desc '+(e.target.checked?'done':'');
+      saveDay(isoDate(currentDate));
+    });
+    foodList.appendChild(row);
+  });
+
+  document.getElementById('waterGoalText').textContent = `${t.waterL.toFixed(1)} ลิตร (~${t.glasses} แก้ว)`;
+  document.getElementById('waterNote').textContent = t.waterNote;
+  const glassRow = document.getElementById('glassRow');
+  glassRow.innerHTML='';
+  for(let i=0;i<t.glasses;i++){
+    const g = document.createElement('button');
+    g.className = 'glass'+(i<dayState.water?' filled':'');
+    g.setAttribute('aria-label', `แก้วน้ำที่ ${i+1}`);
+    g.addEventListener('click', ()=>{
+      dayState.water = (i+1===dayState.water) ? i : i+1;
+      renderGlassesOnly(t.glasses);
+      saveDay(isoDate(currentDate));
+    });
+    glassRow.appendChild(g);
+  }
+
+  const energyRow = document.getElementById('energyRow');
+  energyRow.innerHTML='';
+  for(let i=1;i<=5;i++){
+    const b=document.createElement('button');
+    b.className='energy-btn'+(dayState.energy===i?' active':'');
+    b.textContent=i;
+    b.addEventListener('click', ()=>{
+      dayState.energy = (dayState.energy===i)?null:i;
+      [...energyRow.children].forEach((c,idx)=>c.className='energy-btn'+((idx+1===dayState.energy)?' active':''));
+      saveDay(isoDate(currentDate));
+    });
+    energyRow.appendChild(b);
+  }
+
+  const noteBox = document.getElementById('noteBox');
+  noteBox.value = dayState.note || "";
+  noteBox.oninput = e=>{ dayState.note = e.target.value; saveDay(isoDate(currentDate)); };
+}
+
+function renderGlassesOnly(total){
+  const glassRow = document.getElementById('glassRow');
+  [...glassRow.children].forEach((g,idx)=>{
+    g.className='glass'+(idx<dayState.water?' filled':'');
+  });
+}
+
+function renderScoreboard(){
+  const body = document.getElementById('scoreBody');
+  body.innerHTML='';
+  METRICS.forEach(m=>{
+    const tr=document.createElement('tr');
+    const baselineVal = PROFILE.metrics[m.key] || '—';
+    tr.innerHTML = `
+      <td class="metric-name">${m.name}</td>
+      <td class="baseline">${baselineVal}</td>
+      <td><input type="text" inputmode="decimal" data-key="${m.key}" value="${weeklyState[m.key]||''}" placeholder="—"></td>
+      <td class="hint">${m.hint}</td>`;
+    tr.querySelector('input').addEventListener('input', e=>{
+      weeklyState[m.key] = e.target.value;
+      saveWeekly(mondayOf(currentDate));
+    });
+    body.appendChild(tr);
+  });
+}
+
+/* ---------------- NAV / INIT ---------------- */
+async function goTo(date){
+  currentDate = date;
+  document.getElementById('datePick').value = isoDate(date);
+  const phase = getPhase(date);
+  const templatesForDate = getTemplatesForPhase(phase.key);
+  await loadDay(isoDate(date), templatesForDate[date.getDay()]);
+  await loadWeekly(mondayOf(date));
+  renderDay();
+  renderScoreboard();
+}
+
+document.getElementById('datePick').addEventListener('change', e=>{
+  if(e.target.value) goTo(new Date(e.target.value+'T00:00:00'));
+});
+document.getElementById('prevDay').addEventListener('click', ()=>{
+  const d = new Date(currentDate); d.setDate(d.getDate()-1); goTo(d);
+});
+document.getElementById('nextDay').addEventListener('click', ()=>{
+  const d = new Date(currentDate); d.setDate(d.getDate()+1); goTo(d);
+});
+document.getElementById('gotoToday').addEventListener('click', ()=>{ goTo(new Date()); });
+document.getElementById('resetDay').addEventListener('click', async ()=>{
+  const phase = getPhase(currentDate);
+  const t = getTemplatesForPhase(phase.key)[currentDate.getDay()];
+  dayState = { workout:t.workout.map(()=>false), food:t.food.map(()=>false), energy:null, note:"", water:0, actualLog:[] };
+  await saveDay(isoDate(currentDate));
+  renderDay();
+});
+
+function populateProfileForm(){
+  document.getElementById('pfBirthday').value = PROFILE.birthday || '';
+  document.getElementById('pfScanDate').value = PROFILE.scanDate || '';
+  document.getElementById('pfWeight').value = PROFILE.metrics.weight || '';
+  document.getElementById('pfMuscle').value = PROFILE.metrics.muscle || '';
+  document.getElementById('pfFat').value = PROFILE.metrics.fat || '';
+  document.getElementById('pfBoditrax').value = PROFILE.metrics.boditrax || '';
+  document.getElementById('pfLeg').value = PROFILE.metrics.leg || '';
+  document.getElementById('pfProtein').value = PROFILE.metrics.protein || '';
+  document.getElementById('pfTdee').value = PROFILE.metrics.tdee || '';
+  document.getElementById('pfNotes').value = PROFILE.notes || '';
+}
+
+function hasProfileData(){
+  return !!(PROFILE.birthday || PROFILE.scanDate || PROFILE.notes ||
+    Object.values(PROFILE.metrics).some(v=>v));
+}
+
+function updateProfileHint(){
+  const hint = document.getElementById('profileHint');
+  const toggle = document.getElementById('profileToggle');
+  if(hasProfileData()){
+    hint.textContent = 'ข้อมูลถูกบันทึกไว้ในเครื่อง/บัญชีนี้เท่านั้น กด "แก้ไข" เพื่อดูหรือเปลี่ยนแปลง';
+    toggle.textContent = 'แก้ไข';
+  } else {
+    hint.textContent = 'ไฟล์นี้ไม่มีข้อมูลส่วนตัวติดมาด้วย — กรอกของคุณเองที่นี่ครั้งเดียว ข้อมูลจะถูกบันทึกไว้ในเครื่อง/บัญชีนี้เท่านั้น ไม่ติดไปกับซอร์สโค้ดที่แชร์หรืออัปโหลดที่ไหน';
+    toggle.textContent = 'กรอกข้อมูล';
+  }
+}
+
+document.getElementById('profileToggle').addEventListener('click', ()=>{
+  const form = document.getElementById('profileForm');
+  const isHidden = form.style.display === 'none';
+  if(isHidden) populateProfileForm();
+  form.style.display = isHidden ? 'block' : 'none';
+});
+
+document.getElementById('profileSave').addEventListener('click', async ()=>{
+  PROFILE = {
+    birthday: document.getElementById('pfBirthday').value,
+    scanDate: document.getElementById('pfScanDate').value,
+    metrics: {
+      weight: document.getElementById('pfWeight').value,
+      muscle: document.getElementById('pfMuscle').value,
+      fat: document.getElementById('pfFat').value,
+      boditrax: document.getElementById('pfBoditrax').value,
+      leg: document.getElementById('pfLeg').value,
+      protein: document.getElementById('pfProtein').value,
+      tdee: document.getElementById('pfTdee').value
+    },
+    notes: document.getElementById('pfNotes').value
+  };
+  await saveProfile();
+  updateProfileHint();
+  document.getElementById('profileForm').style.display = 'none';
+  renderHero();
+  renderScoreboard();
+  renderDashboard();
+});
+
+renderHero();
+renderPeriodization();
+renderWeekList('buildWeeksList', BUILD_WEEKS);
+renderWeekList('peakWeeksList', PEAK_WEEKS);
+renderDashboard();
+loadProfile().then(()=>{
+  updateProfileHint();
+  if(!hasProfileData()){
+    document.getElementById('profileForm').style.display = 'block';
+  }
+  populateProfileForm();
+  renderHero();
+  renderScoreboard();
+  renderDashboard();
+});
+goTo(new Date());
+</script>
+</body>
+</html>
