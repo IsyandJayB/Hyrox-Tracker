@@ -763,10 +763,25 @@ async function renderWeightSparkline(){
   </svg>`;
 }
 
+let dashRenderInProgress = false;
+let dashRerenderQueued = false;
 async function renderDashboard(){
-  renderDashPhaseBar();
-  await renderDashBarCharts();
-  await renderWeightSparkline();
+  if(dashRenderInProgress){
+    dashRerenderQueued = true;
+    return;
+  }
+  dashRenderInProgress = true;
+  try{
+    renderDashPhaseBar();
+    await renderDashBarCharts();
+    await renderWeightSparkline();
+  } finally {
+    dashRenderInProgress = false;
+    if(dashRerenderQueued){
+      dashRerenderQueued = false;
+      renderDashboard();
+    }
+  }
 }
 
 
