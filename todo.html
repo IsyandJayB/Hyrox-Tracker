@@ -151,6 +151,19 @@
     padding:12px 14px;display:flex;align-items:flex-start;gap:12px;box-shadow:var(--shadow);
   }
   li.item.done{opacity:0.55;}
+  li.item.cat-bg-personal{background:#FF8FAB;border-color:#FF8FAB;}
+  li.item.cat-bg-personal .text{color:#4A0620;}
+  li.item.cat-bg-personal .check{border-color:#4A0620;color:#4A0620;}
+  li.item.cat-bg-personal .edit, li.item.cat-bg-personal .del{color:#4A0620;}
+  li.item.cat-bg-personal .edit:hover, li.item.cat-bg-personal .del:hover{color:#2c0313;}
+  li.item.cat-bg-work{background:#BDDAE6;border-color:#BDDAE6;}
+  li.item.cat-bg-work .text{color:#082E39;}
+  li.item.cat-bg-work .check{border-color:#082E39;color:#082E39;}
+  li.item.cat-bg-work .edit, li.item.cat-bg-work .del{color:#082E39;}
+  li.item.cat-bg-work .edit:hover, li.item.cat-bg-work .del:hover{color:#04181d;}
+  li.item.cat-bg-personal .tag:not(.cat-personal), li.item.cat-bg-work .tag:not(.cat-work){
+    background:rgba(255,255,255,0.55);
+  }
   .check{
     width:22px;height:22px;border-radius:50%;border:2px solid var(--line);
     flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -206,6 +219,56 @@
 
   .empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px;}
 
+  .view-switch{display:flex;gap:6px;margin-bottom:14px;}
+  .view-switch button{
+    background:var(--card);border:1px solid var(--line);color:var(--muted);
+    padding:7px 16px;border-radius:999px;font-size:13px;cursor:pointer;font-weight:600;
+  }
+  .view-switch button.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);}
+
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .cal-nav .range{font-weight:800;font-size:15px;}
+  .cal-nav-btns{display:flex;gap:6px;}
+  .cal-nav-btns button{
+    background:var(--card);border:1px solid var(--line);color:var(--ink);
+    border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;font-weight:600;
+  }
+  .cal-grid-wrap{overflow-x:auto;padding-bottom:4px;}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(112px,1fr));gap:8px;min-width:820px;}
+  .cal-day{
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:8px;display:flex;flex-direction:column;gap:6px;min-height:130px;
+  }
+  .cal-day.today{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
+  .cal-day-head{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;}
+  .cal-day-head .num{font-size:16px;color:var(--ink);font-weight:800;margin-left:4px;letter-spacing:0;}
+  .cal-day.today .cal-day-head, .cal-day.today .cal-day-head .num{color:var(--accent);}
+  .cal-tasks{display:flex;flex-direction:column;gap:5px;flex:1;}
+  .cal-task{
+    display:flex;align-items:flex-start;gap:5px;font-size:11.5px;padding:5px 6px;
+    border-radius:6px;background:var(--bg);line-height:1.3;
+  }
+  .cal-task.done{opacity:0.5;}
+  .cal-task.done .cal-text{text-decoration:line-through;}
+  .cal-task.cat-bg-personal{background:#FF8FAB;color:#4A0620;}
+  .cal-task.cat-bg-work{background:#BDDAE6;color:#082E39;}
+  .cal-check{
+    width:14px;height:14px;border-radius:50%;border:2px solid var(--line);
+    flex-shrink:0;margin-top:1px;cursor:pointer;background:transparent;padding:0;
+  }
+  .cal-task.done .cal-check{background:var(--done);border-color:var(--done);}
+  .cal-task.cat-bg-personal .cal-check{border-color:#4A0620;}
+  .cal-task.cat-bg-work .cal-check{border-color:#082E39;}
+  .cal-text{flex:1;word-break:break-word;cursor:default;}
+  .cal-del{background:none;border:none;color:inherit;opacity:0.6;font-size:11px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;}
+  .cal-del:hover{opacity:1;}
+  .cal-empty{font-size:11px;color:var(--muted);text-align:center;padding:14px 0;}
+
+  .cal-nodate{margin-top:16px;}
+  .cal-nodate h3{font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);margin:0 0 8px;font-weight:700;}
+  .cal-nodate .cal-tasks{flex-direction:row;flex-wrap:wrap;}
+  .cal-nodate .cal-task{flex:0 1 auto;max-width:220px;}
+
   @media (prefers-reduced-motion: reduce){
     form.add-form button, .check{transition:none;}
   }
@@ -250,8 +313,31 @@
     </select>
   </div>
 
+  <div class="view-switch">
+    <button type="button" class="active" data-view="list">List</button>
+    <button type="button" data-view="week">Week</button>
+  </div>
+
   <ul class="list" id="list"></ul>
   <div class="empty" id="emptyMsg" style="display:none;">No tasks yet — add your first one above</div>
+
+  <div class="calendar" id="calendarView" hidden>
+    <div class="cal-nav">
+      <div class="range" id="weekRangeLabel"></div>
+      <div class="cal-nav-btns">
+        <button type="button" id="calPrev" aria-label="Previous week">‹ Prev</button>
+        <button type="button" id="calToday">This Week</button>
+        <button type="button" id="calNext" aria-label="Next week">Next ›</button>
+      </div>
+    </div>
+    <div class="cal-grid-wrap">
+      <div class="cal-grid" id="calendarGrid"></div>
+    </div>
+    <div class="cal-nodate" id="calNoDate">
+      <h3>No due date</h3>
+      <div class="cal-tasks" id="calNoDateTasks"></div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -265,6 +351,8 @@
   let dbMode = false;
   let db = null;
   let editingId = null;
+  let viewMode = 'list';
+  let weekStart = startOfWeek(new Date());
 
   function uid(){
     return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
@@ -295,6 +383,13 @@
     if(key === 'personal') return 'cat-personal';
     if(key === 'work') return 'cat-work';
     return 'cat-' + catColorIndex(name);
+  }
+
+  function categoryCardClass(name){
+    const key = (name || '').trim().toLowerCase();
+    if(key === 'personal') return 'cat-bg-personal';
+    if(key === 'work') return 'cat-bg-work';
+    return '';
   }
 
   function isOverdue(it){
@@ -355,24 +450,51 @@
   }
 
   function render(){
-    const list = document.getElementById('list');
-    const emptyMsg = document.getElementById('emptyMsg');
-    list.innerHTML = '';
-
     renderCategoryOptions();
+    updateStats();
 
-    const visible = items.filter(it => {
+    const listEl = document.getElementById('list');
+    const emptyMsg = document.getElementById('emptyMsg');
+    const calendarView = document.getElementById('calendarView');
+
+    if(viewMode === 'week'){
+      listEl.style.display = 'none';
+      emptyMsg.style.display = 'none';
+      calendarView.hidden = false;
+      renderCalendar();
+    } else {
+      calendarView.hidden = true;
+      renderList();
+    }
+  }
+
+  function updateStats(){
+    document.getElementById('statTotal').textContent = items.length;
+    document.getElementById('statActive').textContent = items.filter(it => !it.done).length;
+    document.getElementById('statDone').textContent = items.filter(it => it.done).length;
+  }
+
+  function visibleItems(){
+    return items.filter(it => {
       if(filter === 'active' && it.done) return false;
       if(filter === 'done' && !it.done) return false;
       if(categoryFilter !== 'all' && it.category !== categoryFilter) return false;
       return true;
     }).sort(compareItems);
+  }
 
+  function renderList(){
+    const list = document.getElementById('list');
+    const emptyMsg = document.getElementById('emptyMsg');
+    list.innerHTML = '';
+
+    const visible = visibleItems();
     emptyMsg.style.display = visible.length ? 'none' : 'block';
 
     visible.forEach(it => {
       const li = document.createElement('li');
-      li.className = 'item' + (it.done ? ' done' : '');
+      const cardClass = categoryCardClass(it.category);
+      li.className = 'item' + (it.done ? ' done' : '') + (cardClass ? ' ' + cardClass : '');
 
       if(it.id === editingId){
         li.appendChild(buildEditForm(it));
@@ -397,10 +519,12 @@
       const meta = document.createElement('div');
       meta.className = 'meta';
 
-      const cTag = document.createElement('span');
-      cTag.className = 'tag ' + categoryTagClass(it.category);
-      cTag.textContent = it.category;
-      meta.appendChild(cTag);
+      if(!cardClass){
+        const cTag = document.createElement('span');
+        cTag.className = 'tag ' + categoryTagClass(it.category);
+        cTag.textContent = it.category;
+        meta.appendChild(cTag);
+      }
 
       const pTag = document.createElement('span');
       pTag.className = 'tag p-' + it.priority;
@@ -449,10 +573,101 @@
       li.appendChild(actions);
       list.appendChild(li);
     });
+  }
 
-    document.getElementById('statTotal').textContent = items.length;
-    document.getElementById('statActive').textContent = items.filter(it => !it.done).length;
-    document.getElementById('statDone').textContent = items.filter(it => it.done).length;
+  function startOfWeek(d){
+    const date = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    date.setDate(date.getDate() - date.getDay());
+    return date;
+  }
+
+  function fmtDateStr(d){
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function formatWeekRange(start, end){
+    const opts = { month: 'short', day: 'numeric' };
+    const startStr = start.toLocaleDateString('en-US', opts);
+    const endStr = end.toLocaleDateString('en-US', start.getFullYear() === end.getFullYear() ? opts : Object.assign({ year: 'numeric' }, opts));
+    return startStr + ' – ' + endStr + ', ' + end.getFullYear();
+  }
+
+  function buildCalTask(it){
+    const row = document.createElement('div');
+    const cardClass = categoryCardClass(it.category);
+    row.className = 'cal-task' + (it.done ? ' done' : '') + (cardClass ? ' ' + cardClass : '');
+
+    const check = document.createElement('button');
+    check.className = 'cal-check';
+    check.type = 'button';
+    check.setAttribute('aria-label', it.done ? 'Mark incomplete' : 'Mark complete');
+    check.addEventListener('click', () => toggleDone(it.id));
+
+    const text = document.createElement('span');
+    text.className = 'cal-text';
+    text.textContent = it.text + (it.dueTime ? ' · ' + it.dueTime : '');
+
+    const del = document.createElement('button');
+    del.className = 'cal-del';
+    del.type = 'button';
+    del.setAttribute('aria-label', 'Delete task');
+    del.textContent = '✕';
+    del.addEventListener('click', () => removeItem(it.id));
+
+    row.appendChild(check);
+    row.appendChild(text);
+    row.appendChild(del);
+    return row;
+  }
+
+  function renderCalendar(){
+    const visible = visibleItems();
+
+    const days = [];
+    for(let i = 0; i < 7; i++){
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      days.push(d);
+    }
+
+    document.getElementById('weekRangeLabel').textContent = formatWeekRange(days[0], days[6]);
+
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+    const todayNow = todayStr();
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    days.forEach(d => {
+      const dateStr = fmtDateStr(d);
+      const col = document.createElement('div');
+      col.className = 'cal-day' + (dateStr === todayNow ? ' today' : '');
+
+      const head = document.createElement('div');
+      head.className = 'cal-day-head';
+      head.innerHTML = dayNames[d.getDay()] + ' <span class="num">' + d.getDate() + '</span>';
+      col.appendChild(head);
+
+      const tasksWrap = document.createElement('div');
+      tasksWrap.className = 'cal-tasks';
+
+      const dayItems = visible.filter(it => it.dueDate === dateStr).sort(compareItems);
+      if(dayItems.length){
+        dayItems.forEach(it => tasksWrap.appendChild(buildCalTask(it)));
+      } else {
+        const empty = document.createElement('div');
+        empty.className = 'cal-empty';
+        empty.textContent = '—';
+        tasksWrap.appendChild(empty);
+      }
+      col.appendChild(tasksWrap);
+      grid.appendChild(col);
+    });
+
+    const noDateWrap = document.getElementById('calNoDateTasks');
+    noDateWrap.innerHTML = '';
+    const noDateItems = visible.filter(it => !it.dueDate);
+    document.getElementById('calNoDate').style.display = noDateItems.length ? '' : 'none';
+    noDateItems.forEach(it => noDateWrap.appendChild(buildCalTask(it)));
   }
 
   function buildEditForm(it){
@@ -648,6 +863,28 @@
 
   document.getElementById('categoryFilterSelect').addEventListener('change', function(){
     categoryFilter = this.value;
+    render();
+  });
+
+  document.querySelectorAll('.view-switch button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.view-switch button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      viewMode = btn.dataset.view;
+      render();
+    });
+  });
+
+  document.getElementById('calPrev').addEventListener('click', () => {
+    weekStart.setDate(weekStart.getDate() - 7);
+    render();
+  });
+  document.getElementById('calNext').addEventListener('click', () => {
+    weekStart.setDate(weekStart.getDate() + 7);
+    render();
+  });
+  document.getElementById('calToday').addEventListener('click', () => {
+    weekStart = startOfWeek(new Date());
     render();
   });
 
