@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,7 +16,12 @@
     --accent:#4f5dff;
     --accent-ink:#ffffff;
     --danger:#e2534a;
+    --danger-bg:#ffe3e1;
+    --warn:#a3760a;
+    --warn-bg:#fff3d6;
     --done:#2fb673;
+    --done-bg:#e4f5ea;
+    --due-bg:#eef0ff;
     --shadow:0 6px 20px rgba(20,20,40,0.06);
     --cat-0-bg:#e0f7f5; --cat-0-ink:#0f766e;
     --cat-1-bg:#fce7f3; --cat-1-ink:#be185d;
@@ -24,6 +29,54 @@
     --cat-3-bg:#e0f2fe; --cat-3-ink:#0369a1;
     --cat-4-bg:#ecfccb; --cat-4-ink:#4d7c0f;
     --cat-5-bg:#e2e8f0; --cat-5-ink:#475569;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#15161c;
+      --card:#1e2029;
+      --line:#2c2e3a;
+      --ink:#f1f2f6;
+      --muted:#8b8fa3;
+      --accent:#6d78ff;
+      --accent-ink:#ffffff;
+      --danger:#ff8079;
+      --danger-bg:#3a2226;
+      --warn:#e0b356;
+      --warn-bg:#3a3020;
+      --done:#4fd394;
+      --done-bg:#1e3328;
+      --due-bg:#242745;
+      --shadow:0 6px 20px rgba(0,0,0,0.35);
+      --cat-0-bg:#123a37; --cat-0-ink:#5eead4;
+      --cat-1-bg:#3a1530; --cat-1-ink:#f9a8d4;
+      --cat-2-bg:#2e1a45; --cat-2-ink:#d8b4fe;
+      --cat-3-bg:#0c2e42; --cat-3-ink:#7dd3fc;
+      --cat-4-bg:#263a10; --cat-4-ink:#bef264;
+      --cat-5-bg:#2a3341; --cat-5-ink:#cbd5e1;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#15161c;
+    --card:#1e2029;
+    --line:#2c2e3a;
+    --ink:#f1f2f6;
+    --muted:#8b8fa3;
+    --accent:#6d78ff;
+    --accent-ink:#ffffff;
+    --danger:#ff8079;
+    --danger-bg:#3a2226;
+    --warn:#e0b356;
+    --warn-bg:#3a3020;
+    --done:#4fd394;
+    --done-bg:#1e3328;
+    --due-bg:#242745;
+    --shadow:0 6px 20px rgba(0,0,0,0.35);
+    --cat-0-bg:#123a37; --cat-0-ink:#5eead4;
+    --cat-1-bg:#3a1530; --cat-1-ink:#f9a8d4;
+    --cat-2-bg:#2e1a45; --cat-2-ink:#d8b4fe;
+    --cat-3-bg:#0c2e42; --cat-3-ink:#7dd3fc;
+    --cat-4-bg:#263a10; --cat-4-ink:#bef264;
+    --cat-5-bg:#2a3341; --cat-5-ink:#cbd5e1;
   }
   *{box-sizing:border-box;}
   body{
@@ -33,15 +86,21 @@
     font-family:'Inter',sans-serif;
     min-height:100vh;
   }
-  .wrap{max-width:640px;margin:0 auto;padding:32px 18px 80px;}
+  .wrap{max-width:660px;margin:0 auto;padding:32px 18px 80px;}
 
-  header{margin-bottom:20px;}
-  header h1{font-size:26px;font-weight:800;margin:0 0 4px;}
+  header{margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  header h1{font-size:26px;font-weight:800;margin:0 0 4px;text-wrap:balance;}
   header p{margin:0;color:var(--muted);font-size:13.5px;}
+  .sync-badge{
+    font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;
+    padding:5px 10px;border-radius:999px;white-space:nowrap;
+  }
+  .sync-badge.on{background:var(--done-bg);color:var(--done);}
+  .sync-badge.off{background:var(--warn-bg);color:var(--warn);}
 
   .stats{display:flex;gap:10px;margin:18px 0;}
   .stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);}
-  .stat .n{font-size:22px;font-weight:800;}
+  .stat .n{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;}
   .stat .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;}
 
   form.add-form{
@@ -52,23 +111,39 @@
     background:var(--card);color:var(--ink);font-size:14.5px;font-family:inherit;
   }
   form.add-form input#categoryInput{flex:0 1 130px;}
-  form.add-form input[type=text]:focus{outline:2px solid var(--accent);outline-offset:1px;}
-  form.add-form select, form.add-form input[type=date]{
+  form.add-form input[type=text]:focus-visible,
+  form.add-form select:focus-visible,
+  form.add-form input[type=date]:focus-visible,
+  form.add-form input[type=time]:focus-visible,
+  form.add-form button:focus-visible,
+  .filters button:focus-visible,
+  .filters select:focus-visible,
+  .check:focus-visible,
+  .del:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+  form.add-form select, form.add-form input[type=date], form.add-form input[type=time]{
     padding:13px 10px;border-radius:10px;border:1px solid var(--line);
     background:var(--card);color:var(--ink);font-size:13px;font-family:inherit;
+    color-scheme:light dark;
   }
+  form.add-form input[type=date]{flex:0 1 140px;}
+  form.add-form input[type=time]{flex:0 1 110px;}
   form.add-form button{
     background:var(--accent);color:var(--accent-ink);border:none;border-radius:10px;
     padding:13px 18px;font-weight:700;font-size:14.5px;cursor:pointer;white-space:nowrap;
   }
   form.add-form button:active{transform:scale(0.98);}
 
-  .filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
   .filters button{
     background:var(--card);border:1px solid var(--line);color:var(--muted);
     padding:7px 14px;border-radius:999px;font-size:13px;cursor:pointer;font-weight:600;
   }
-  .filters button.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .filters button.active{background:var(--ink);color:var(--bg);border-color:var(--ink);}
+  .filters select{
+    background:var(--card);border:1px solid var(--line);color:var(--muted);
+    padding:7px 12px;border-radius:999px;font-size:13px;cursor:pointer;font-weight:600;
+    font-family:inherit;color-scheme:light dark;
+  }
 
   ul.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
   li.item{
@@ -79,7 +154,7 @@
   .check{
     width:22px;height:22px;border-radius:50%;border:2px solid var(--line);
     flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-    background:transparent;
+    background:transparent;color:var(--ink);
   }
   li.item.done .check{background:var(--done);border-color:var(--done);color:#fff;font-size:12px;}
   .body{flex:1;min-width:0;}
@@ -87,23 +162,18 @@
   li.item.done .text{text-decoration:line-through;}
   .meta{display:flex;gap:8px;margin-top:5px;flex-wrap:wrap;}
   .tag{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:700;}
-  .tag.p-high{background:#ffe3e1;color:var(--danger);}
-  .tag.p-medium{background:#fff3d6;color:#a3760a;}
-  .tag.p-low{background:#e4f5ea;color:var(--done);}
-  .tag.due{background:#eef0ff;color:var(--accent);}
-  .tag.due.overdue{background:#ffe3e1;color:var(--danger);}
+  .tag.p-high{background:var(--danger-bg);color:var(--danger);}
+  .tag.p-medium{background:var(--warn-bg);color:var(--warn);}
+  .tag.p-low{background:var(--done-bg);color:var(--done);}
+  .tag.due{background:var(--due-bg);color:var(--accent);}
+  .tag.due.overdue{background:var(--danger-bg);color:var(--danger);}
+  .tag.completed{background:var(--done-bg);color:var(--done);}
   .tag.cat-0{background:var(--cat-0-bg);color:var(--cat-0-ink);}
   .tag.cat-1{background:var(--cat-1-bg);color:var(--cat-1-ink);}
   .tag.cat-2{background:var(--cat-2-bg);color:var(--cat-2-ink);}
   .tag.cat-3{background:var(--cat-3-bg);color:var(--cat-3-ink);}
   .tag.cat-4{background:var(--cat-4-bg);color:var(--cat-4-ink);}
   .tag.cat-5{background:var(--cat-5-bg);color:var(--cat-5-ink);}
-
-  .filters select{
-    background:var(--card);border:1px solid var(--line);color:var(--muted);
-    padding:7px 12px;border-radius:999px;font-size:13px;cursor:pointer;font-weight:600;
-    font-family:inherit;
-  }
   .del{
     background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;
     padding:2px 4px;line-height:1;flex-shrink:0;
@@ -111,65 +181,65 @@
   .del:hover{color:var(--danger);}
 
   .empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px;}
+
+  @media (prefers-reduced-motion: reduce){
+    form.add-form button, .check{transition:none;}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>To-Do List</h1>
-    <p>จัดการงานของคุณ — บันทึกอัตโนมัติในเบราว์เซอร์นี้</p>
+    <div>
+      <h1>To-Do List</h1>
+      <p>Access your tasks from any device when online</p>
+    </div>
+    <span class="sync-badge off" id="syncBadge">Local only</span>
   </header>
 
   <div class="stats">
-    <div class="stat"><div class="n" id="statTotal">0</div><div class="l">ทั้งหมด</div></div>
-    <div class="stat"><div class="n" id="statActive">0</div><div class="l">ค้างอยู่</div></div>
-    <div class="stat"><div class="n" id="statDone">0</div><div class="l">เสร็จแล้ว</div></div>
+    <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Total</div></div>
+    <div class="stat"><div class="n" id="statActive">0</div><div class="l">Pending</div></div>
+    <div class="stat"><div class="n" id="statDone">0</div><div class="l">Complete</div></div>
   </div>
 
   <form class="add-form" id="addForm">
-    <input type="text" id="taskInput" placeholder="เพิ่มงานใหม่..." autocomplete="off" required>
-    <input type="text" id="categoryInput" list="categoryList" placeholder="หมวดหมู่" autocomplete="off">
+    <input type="text" id="taskInput" placeholder="Add new to-do" autocomplete="off" required>
+    <input type="text" id="categoryInput" list="categoryList" placeholder="Category" autocomplete="off">
     <datalist id="categoryList"></datalist>
-    <select id="priorityInput">
-      <option value="medium">กลาง</option>
-      <option value="high">สูง</option>
-      <option value="low">ต่ำ</option>
+    <select id="priorityInput" aria-label="Priority">
+      <option value="medium">Medium</option>
+      <option value="high">High</option>
+      <option value="low">Low</option>
     </select>
-    <input type="date" id="dueInput">
-    <button type="submit">เพิ่ม</button>
+    <input type="date" id="dueDateInput" aria-label="Due date">
+    <input type="time" id="dueTimeInput" aria-label="Due time">
+    <button type="submit">Add</button>
   </form>
 
   <div class="filters">
-    <button data-filter="all" class="active">ทั้งหมด</button>
-    <button data-filter="active">ค้างอยู่</button>
-    <button data-filter="done">เสร็จแล้ว</button>
+    <button data-filter="all" class="active">Total</button>
+    <button data-filter="active">Pending</button>
+    <button data-filter="done">Complete</button>
     <select id="categoryFilterSelect">
-      <option value="all">ทุกหมวดหมู่</option>
+      <option value="all">All Categories</option>
     </select>
   </div>
 
   <ul class="list" id="list"></ul>
-  <div class="empty" id="emptyMsg" style="display:none;">ยังไม่มีงาน — เพิ่มงานแรกของคุณด้านบน</div>
+  <div class="empty" id="emptyMsg" style="display:none;">No tasks yet — add your first one above</div>
 </div>
 
 <script>
 (function(){
   const STORAGE_KEY = 'todo-list-items-v1';
-  const DEFAULT_CATEGORY = 'ทั่วไป';
+  const DEFAULT_CATEGORY = 'General';
+
   let items = [];
   let filter = 'all';
   let categoryFilter = 'all';
-
-  function load(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      items = raw ? JSON.parse(raw) : [];
-    }catch(e){ items = []; }
-    items.forEach(it => { if(!it.category) it.category = DEFAULT_CATEGORY; });
-  }
-  function save(){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }
+  let dbMode = false;
+  let db = null;
 
   function uid(){
     return Date.now().toString(36) + Math.random().toString(36).slice(2,8);
@@ -177,11 +247,16 @@
 
   function todayStr(){
     const d = new Date();
-    return d.toISOString().slice(0,10);
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  function nowTimeStr(){
+    const d = new Date();
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   }
 
   function priorityLabel(p){
-    return {high:'สูง', medium:'กลาง', low:'ต่ำ'}[p] || p;
+    return {high:'High', medium:'Medium', low:'Low'}[p] || p;
   }
 
   function catColorIndex(name){
@@ -190,8 +265,37 @@
     return h % 6;
   }
 
+  function isOverdue(it){
+    if(it.done || !it.dueDate) return false;
+    const today = todayStr();
+    if(it.dueDate < today) return true;
+    if(it.dueDate > today) return false;
+    if(!it.dueTime) return false;
+    return it.dueTime < nowTimeStr();
+  }
+
+  function formatCompleted(iso){
+    if(!iso) return '';
+    const d = new Date(iso);
+    if(isNaN(d.getTime())) return '';
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0')
+      + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+
+  function compareItems(a, b){
+    const catCmp = (a.category || '').localeCompare(b.category || '');
+    if(catCmp) return catCmp;
+    const ad = a.dueDate || '9999-12-31';
+    const bd = b.dueDate || '9999-12-31';
+    if(ad !== bd) return ad < bd ? -1 : 1;
+    const at = a.dueTime || '99:99';
+    const bt = b.dueTime || '99:99';
+    if(at !== bt) return at < bt ? -1 : 1;
+    return 0;
+  }
+
   function allCategories(){
-    return Array.from(new Set(items.map(it => it.category))).sort((a, b) => a.localeCompare(b, 'th'));
+    return Array.from(new Set(items.map(it => it.category))).sort((a, b) => a.localeCompare(b));
   }
 
   function renderCategoryOptions(){
@@ -207,7 +311,7 @@
 
     const select = document.getElementById('categoryFilterSelect');
     const prevValue = select.value;
-    select.innerHTML = '<option value="all">ทุกหมวดหมู่</option>';
+    select.innerHTML = '<option value="all">All Categories</option>';
     cats.forEach(c => {
       const opt = document.createElement('option');
       opt.value = c;
@@ -230,7 +334,7 @@
       if(filter === 'done' && !it.done) return false;
       if(categoryFilter !== 'all' && it.category !== categoryFilter) return false;
       return true;
-    });
+    }).sort(compareItems);
 
     emptyMsg.style.display = visible.length ? 'none' : 'block';
 
@@ -241,7 +345,7 @@
       const check = document.createElement('button');
       check.className = 'check';
       check.type = 'button';
-      check.setAttribute('aria-label', 'toggle done');
+      check.setAttribute('aria-label', it.done ? 'Mark incomplete' : 'Mark complete');
       check.textContent = it.done ? '✓' : '';
       check.addEventListener('click', () => toggleDone(it.id));
 
@@ -265,12 +369,18 @@
       pTag.textContent = priorityLabel(it.priority);
       meta.appendChild(pTag);
 
-      if(it.due){
+      if(it.dueDate){
         const dTag = document.createElement('span');
-        const overdue = !it.done && it.due < todayStr();
-        dTag.className = 'tag due' + (overdue ? ' overdue' : '');
-        dTag.textContent = it.due;
+        dTag.className = 'tag due' + (isOverdue(it) ? ' overdue' : '');
+        dTag.textContent = it.dueDate + (it.dueTime ? ' ' + it.dueTime : '');
         meta.appendChild(dTag);
+      }
+
+      if(it.done && it.completedAt){
+        const doneTag = document.createElement('span');
+        doneTag.className = 'tag completed';
+        doneTag.textContent = 'Completed ' + formatCompleted(it.completedAt);
+        meta.appendChild(doneTag);
       }
 
       body.appendChild(text);
@@ -279,7 +389,7 @@
       const del = document.createElement('button');
       del.className = 'del';
       del.type = 'button';
-      del.setAttribute('aria-label', 'delete');
+      del.setAttribute('aria-label', 'Delete task');
       del.textContent = '✕';
       del.addEventListener('click', () => removeItem(it.id));
 
@@ -294,21 +404,75 @@
     document.getElementById('statDone').textContent = items.filter(it => it.done).length;
   }
 
-  function addItem(text, priority, due, category){
-    items.unshift({ id: uid(), text, priority, due: due || '', category: category || DEFAULT_CATEGORY, done: false });
-    save();
-    render();
+  function normalize(it){
+    if(!it.category) it.category = DEFAULT_CATEGORY;
+    if(!it.dueDate) it.dueDate = '';
+    if(!it.dueTime) it.dueTime = '';
+    if(!it.completedAt) it.completedAt = '';
+    return it;
+  }
+
+  // ---- Local storage fallback (used when the db capability is unavailable) ----
+  function loadLocal(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      items = raw ? JSON.parse(raw) : null;
+    }catch(e){ items = null; }
+    if(!items){
+      items = [
+        { id: 's1', text: 'Example: Buy groceries', priority: 'high', category: 'Personal', dueDate: '', dueTime: '', completedAt: '', done: false },
+        { id: 's2', text: 'Example: Send weekly report', priority: 'medium', category: 'Work', dueDate: todayStr(), dueTime: '17:00', completedAt: '', done: false },
+        { id: 's3', text: 'Example: Dentist appointment', priority: 'low', category: 'Health', dueDate: '', dueTime: '', completedAt: new Date().toISOString(), done: true }
+      ];
+    }
+    items.forEach(normalize);
+  }
+  function saveLocal(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }catch(e){}
+  }
+
+  // ---- CRUD (routes to db when available, else localStorage) ----
+  function addItem(text, category, priority, dueDate, dueTime){
+    const data = {
+      text, priority,
+      category: category || DEFAULT_CATEGORY,
+      dueDate: dueDate || '',
+      dueTime: dueTime || '',
+      completedAt: '',
+      done: false
+    };
+    if(dbMode){
+      db.collection('todos').add(data).catch(() => {});
+    } else {
+      items.unshift(Object.assign({ id: uid() }, data));
+      saveLocal();
+      render();
+    }
   }
 
   function toggleDone(id){
     const it = items.find(i => i.id === id);
-    if(it){ it.done = !it.done; save(); render(); }
+    if(!it) return;
+    const done = !it.done;
+    const completedAt = done ? new Date().toISOString() : '';
+    if(dbMode){
+      db.collection('todos').doc(id).update({ done, completedAt }).catch(() => {});
+    } else {
+      it.done = done;
+      it.completedAt = completedAt;
+      saveLocal();
+      render();
+    }
   }
 
   function removeItem(id){
-    items = items.filter(i => i.id !== id);
-    save();
-    render();
+    if(dbMode){
+      db.collection('todos').doc(id).delete().catch(() => {});
+    } else {
+      items = items.filter(i => i.id !== id);
+      saveLocal();
+      render();
+    }
   }
 
   document.getElementById('addForm').addEventListener('submit', function(e){
@@ -316,13 +480,15 @@
     const input = document.getElementById('taskInput');
     const categoryInput = document.getElementById('categoryInput');
     const priority = document.getElementById('priorityInput').value;
-    const due = document.getElementById('dueInput').value;
+    const dueDate = document.getElementById('dueDateInput').value;
+    const dueTime = document.getElementById('dueTimeInput').value;
     const text = input.value.trim();
     if(!text) return;
-    addItem(text, priority, due, categoryInput.value.trim());
+    addItem(text, categoryInput.value.trim(), priority, dueDate, dueTime);
     input.value = '';
     categoryInput.value = '';
-    document.getElementById('dueInput').value = '';
+    document.getElementById('dueDateInput').value = '';
+    document.getElementById('dueTimeInput').value = '';
     input.focus();
   });
 
@@ -340,9 +506,40 @@
     render();
   });
 
-  load();
-  render();
+  function setSyncBadge(on){
+    const badge = document.getElementById('syncBadge');
+    badge.textContent = on ? 'Synced' : 'Local only';
+    badge.className = 'sync-badge ' + (on ? 'on' : 'off');
+  }
+
+  async function init(){
+    loadLocal();
+    render();
+
+    try{
+      if(window.claude && typeof window.claude.use === 'function'){
+        db = await window.claude.use('db');
+      }
+    }catch(e){ db = null; }
+
+    if(db){
+      dbMode = true;
+      setSyncBadge(true);
+      db.collection('todos').onSnapshot(function(snap){
+        items = snap.docs.map(function(d){ return normalize(Object.assign({ id: d.id }, d.data())); });
+        render();
+      }, function(){
+        dbMode = false;
+        setSyncBadge(false);
+        loadLocal();
+        render();
+      });
+    }
+  }
+
+  init();
 })();
 </script>
+
 </body>
 </html>
