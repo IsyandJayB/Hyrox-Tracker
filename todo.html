@@ -164,6 +164,13 @@
   li.item.cat-bg-personal .tag:not(.cat-personal), li.item.cat-bg-work .tag:not(.cat-work){
     background:rgba(255,255,255,0.55);
   }
+  li.item.overdue-bg{background:#E5484D;border-color:#E5484D;}
+  li.item.overdue-bg .text{color:#ffffff;}
+  li.item.overdue-bg .check{border-color:#ffffff;color:#ffffff;}
+  li.item.overdue-bg .edit, li.item.overdue-bg .del{color:#ffffff;}
+  li.item.overdue-bg .edit:hover, li.item.overdue-bg .del:hover{color:#ffe1e1;}
+  li.item.overdue-bg .tag{background:rgba(255,255,255,0.28);color:#ffffff;}
+  li.item.overdue-bg .tag.due.overdue{background:rgba(255,255,255,0.4);color:#ffffff;}
   .check{
     width:22px;height:22px;border-radius:50%;border:2px solid var(--line);
     flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -252,6 +259,7 @@
   .cal-task.done .cal-text{text-decoration:line-through;}
   .cal-task.cat-bg-personal{background:#FF8FAB;color:#4A0620;}
   .cal-task.cat-bg-work{background:#BDDAE6;color:#082E39;}
+  .cal-task.overdue-bg{background:#E5484D;color:#ffffff;}
   .cal-check{
     width:14px;height:14px;border-radius:50%;border:2px solid var(--line);
     flex-shrink:0;margin-top:1px;cursor:pointer;background:transparent;padding:0;
@@ -259,6 +267,7 @@
   .cal-task.done .cal-check{background:var(--done);border-color:var(--done);}
   .cal-task.cat-bg-personal .cal-check{border-color:#4A0620;}
   .cal-task.cat-bg-work .cal-check{border-color:#082E39;}
+  .cal-task.overdue-bg .cal-check{border-color:#ffffff;}
   .cal-text{flex:1;word-break:break-word;cursor:default;}
   .cal-del{background:none;border:none;color:inherit;opacity:0.6;font-size:11px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;}
   .cal-del:hover{opacity:1;}
@@ -494,7 +503,9 @@
 
     visible.forEach(it => {
       const li = document.createElement('li');
-      const cardClass = categoryCardClass(it.category);
+      const catCardClass = categoryCardClass(it.category);
+      const overdue = isOverdue(it);
+      const cardClass = overdue ? 'overdue-bg' : catCardClass;
       li.className = 'item' + (it.done ? ' done' : '') + (cardClass ? ' ' + cardClass : '');
 
       if(it.id === editingId){
@@ -520,7 +531,7 @@
       const meta = document.createElement('div');
       meta.className = 'meta';
 
-      if(!cardClass){
+      if(!catCardClass || overdue){
         const cTag = document.createElement('span');
         cTag.className = 'tag ' + categoryTagClass(it.category);
         cTag.textContent = it.category;
@@ -534,7 +545,7 @@
 
       if(it.dueDate){
         const dTag = document.createElement('span');
-        dTag.className = 'tag due' + (isOverdue(it) ? ' overdue' : '');
+        dTag.className = 'tag due' + (overdue ? ' overdue' : '');
         dTag.textContent = it.dueDate + (it.dueTime ? ' ' + it.dueTime : '');
         meta.appendChild(dTag);
       }
@@ -595,7 +606,7 @@
 
   function buildCalTask(it){
     const row = document.createElement('div');
-    const cardClass = categoryCardClass(it.category);
+    const cardClass = isOverdue(it) ? 'overdue-bg' : categoryCardClass(it.category);
     row.className = 'cal-task' + (it.done ? ' done' : '') + (cardClass ? ' ' + cardClass : '');
 
     const check = document.createElement('button');
