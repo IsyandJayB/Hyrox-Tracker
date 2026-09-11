@@ -314,8 +314,8 @@
   </form>
 
   <div class="filters">
-    <button data-filter="all" class="active">Total</button>
-    <button data-filter="active">Pending</button>
+    <button data-filter="all">Total</button>
+    <button data-filter="active" class="active">Pending</button>
     <button data-filter="done">Complete</button>
     <select id="categoryFilterSelect">
       <option value="all">All Categories</option>
@@ -355,7 +355,7 @@
   const DEFAULT_CATEGORY = 'General';
 
   let items = [];
-  let filter = 'all';
+  let filter = 'active';
   let categoryFilter = 'all';
   let dbMode = false;
   let db = null;
