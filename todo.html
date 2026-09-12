@@ -137,10 +137,12 @@
 
   form.add-form{
     display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:14px;box-shadow:var(--shadow);
   }
   form.add-form input[type=text]{
     flex:1;min-width:140px;padding:13px 14px;border-radius:10px;border:1px solid var(--line);
-    background:var(--card);color:var(--ink);font-size:14.5px;font-family:inherit;
+    background:var(--bg);color:var(--ink);font-size:14.5px;font-family:inherit;
   }
   form.add-form input#categoryInput{flex:0 1 130px;}
   form.add-form input[type=text]:focus-visible,
@@ -154,9 +156,10 @@
   .del:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   form.add-form select, form.add-form input[type=date], form.add-form input[type=time]{
     padding:13px 10px;border-radius:10px;border:1px solid var(--line);
-    background:var(--card);color:var(--ink);font-size:13px;font-family:inherit;
+    background:var(--bg);color:var(--ink);font-size:13px;font-family:inherit;
     color-scheme:light dark;
   }
+  .due-group{display:flex;gap:8px;}
   form.add-form input[type=date]{flex:0 1 140px;}
   form.add-form input[type=time]{flex:0 1 110px;}
   form.add-form button{
@@ -343,8 +346,10 @@
       <option value="high">High</option>
       <option value="low">Low</option>
     </select>
-    <input type="date" id="dueDateInput" aria-label="Due date">
-    <input type="time" id="dueTimeInput" aria-label="Due time">
+    <div class="due-group">
+      <input type="date" id="dueDateInput" aria-label="Due date">
+      <input type="time" id="dueTimeInput" aria-label="Due time">
+    </div>
     <button type="submit">Add</button>
   </form>
 
