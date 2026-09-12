@@ -89,7 +89,10 @@
   .wrap{max-width:660px;margin:0 auto;padding:32px 18px 80px;}
 
   header{margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
-  header h1{font-size:24px;font-weight:800;margin:0 0 6px;line-height:1.25;text-wrap:balance;}
+  header h1{font-size:clamp(13px, 4.2vw, 17px);font-weight:800;margin:0 0 6px;letter-spacing:0.01em;white-space:nowrap;}
+  @media (max-width:420px){
+    header h1{white-space:normal;}
+  }
   header p{margin:0;color:var(--muted);font-size:13.5px;}
   .sync-badge{
     font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;
@@ -316,7 +319,7 @@
 <div class="wrap">
   <header>
     <div>
-      <h1>And it all began with<br>one<br>small win.</h1>
+      <h1>AND IT ALL BEGAN WITH ONE SMALL WIN</h1>
       <p>Access your tasks from any device when online</p>
     </div>
     <span class="sync-badge off" id="syncBadge">Local only</span>
