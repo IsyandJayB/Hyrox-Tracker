@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>To-Do List</title>
+<title>One Small Win</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -89,7 +89,7 @@
   .wrap{max-width:660px;margin:0 auto;padding:32px 18px 80px;}
 
   header{margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
-  header h1{font-size:26px;font-weight:800;margin:0 0 4px;text-wrap:balance;}
+  header h1{font-size:24px;font-weight:800;margin:0 0 6px;line-height:1.25;text-wrap:balance;}
   header p{margin:0;color:var(--muted);font-size:13.5px;}
   .sync-badge{
     font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;
@@ -102,6 +102,35 @@
   .stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);}
   .stat .n{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;}
   .stat .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;}
+
+  .cat-progress-heading{
+    font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);
+    font-weight:700;margin:18px 0 8px;
+  }
+  .cat-progress{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .cat-progress-card{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:12px 10px;box-shadow:var(--shadow);min-width:88px;
+  }
+  .cat-pie{
+    width:52px;height:52px;border-radius:50%;flex-shrink:0;
+    border:1px solid var(--line);
+  }
+  .cat-progress-name{
+    display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;
+    color:var(--ink);white-space:nowrap;
+  }
+  .cat-progress-frac{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .cat-dot.cat-0{background:var(--cat-0-bg);}
+  .cat-dot.cat-1{background:var(--cat-1-bg);}
+  .cat-dot.cat-2{background:var(--cat-2-bg);}
+  .cat-dot.cat-3{background:var(--cat-3-bg);}
+  .cat-dot.cat-4{background:var(--cat-4-bg);}
+  .cat-dot.cat-5{background:var(--cat-5-bg);}
+  .cat-dot.cat-personal{background:#FF8FAB;}
+  .cat-dot.cat-work{background:#BDDAE6;}
 
   form.add-form{
     display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;
@@ -287,7 +316,7 @@
 <div class="wrap">
   <header>
     <div>
-      <h1>To-Do List</h1>
+      <h1>And it all began with<br>one<br>small win.</h1>
       <p>Access your tasks from any device when online</p>
     </div>
     <span class="sync-badge off" id="syncBadge">Local only</span>
@@ -298,6 +327,9 @@
     <div class="stat"><div class="n" id="statActive">0</div><div class="l">Pending</div></div>
     <div class="stat"><div class="n" id="statDone">0</div><div class="l">Complete</div></div>
   </div>
+
+  <div class="cat-progress-heading">Progress by Category</div>
+  <div class="cat-progress" id="catProgress"></div>
 
   <form class="add-form" id="addForm">
     <input type="text" id="taskInput" placeholder="Add new to-do" autocomplete="off" required>
@@ -461,6 +493,7 @@
   function render(){
     renderCategoryOptions();
     updateStats();
+    renderCategoryProgress();
 
     const listEl = document.getElementById('list');
     const emptyMsg = document.getElementById('emptyMsg');
@@ -482,6 +515,46 @@
     document.getElementById('statTotal').textContent = items.length;
     document.getElementById('statActive').textContent = items.filter(it => !it.done).length;
     document.getElementById('statDone').textContent = items.filter(it => it.done).length;
+  }
+
+  function renderCategoryProgress(){
+    const wrap = document.getElementById('catProgress');
+    wrap.innerHTML = '';
+
+    const cats = allCategories();
+    cats.forEach(cat => {
+      const catItems = items.filter(it => it.category === cat);
+      const total = catItems.length;
+      const done = catItems.filter(it => it.done).length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+
+      const card = document.createElement('div');
+      card.className = 'cat-progress-card';
+
+      const pie = document.createElement('div');
+      pie.className = 'cat-pie';
+      pie.style.background = total
+        ? 'conic-gradient(var(--done) 0% ' + pct + '%, var(--line) ' + pct + '% 100%)'
+        : 'var(--line)';
+      pie.setAttribute('role', 'img');
+      pie.setAttribute('aria-label', cat + ': ' + done + ' of ' + total + ' complete (' + pct + '%)');
+
+      const name = document.createElement('div');
+      name.className = 'cat-progress-name';
+      const dot = document.createElement('span');
+      dot.className = 'cat-dot ' + categoryTagClass(cat);
+      name.appendChild(dot);
+      name.appendChild(document.createTextNode(cat));
+
+      const frac = document.createElement('div');
+      frac.className = 'cat-progress-frac';
+      frac.textContent = done + ' / ' + total + ' · ' + pct + '%';
+
+      card.appendChild(pie);
+      card.appendChild(name);
+      card.appendChild(frac);
+      wrap.appendChild(card);
+    });
   }
 
   function visibleItems(){
