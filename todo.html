@@ -106,10 +106,43 @@
   .stat .n{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;}
   .stat .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;margin-top:2px;}
 
+  .cat-progress-heading-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 8px;
+  }
   .cat-progress-heading{
     font-size:11.5px;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);
-    font-weight:700;margin:18px 0 8px;
+    font-weight:700;
   }
+  .purge-link{
+    background:none;border:none;color:var(--danger);font-size:11.5px;font-weight:700;
+    cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;
+    white-space:nowrap;
+  }
+  .purge-link:hover{color:var(--ink);}
+
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(15,17,23,0.5);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:100;
+  }
+  .modal-overlay[hidden]{display:none;}
+  .modal{
+    background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:20px;max-width:360px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,0.35);
+  }
+  .modal h3{margin:0 0 8px;font-size:16px;font-weight:800;color:var(--ink);}
+  .modal p{margin:0 0 16px;font-size:13.5px;color:var(--muted);line-height:1.5;}
+  .modal input[type=date]{
+    width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);
+    background:var(--bg);color:var(--ink);font-size:14px;margin-bottom:16px;
+    font-family:inherit;color-scheme:light dark;
+  }
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+  .modal-actions button{
+    border:none;border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;
+  }
+  .modal-actions button.primary{background:var(--accent);color:var(--accent-ink);}
+  .modal-actions button.danger{background:var(--danger);color:#ffffff;}
+  .modal-actions button.secondary{background:var(--line);color:var(--ink);}
   .cat-progress{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
   .cat-progress-card{
     display:flex;flex-direction:column;align-items:center;gap:6px;
@@ -334,7 +367,10 @@
     <div class="stat"><div class="n" id="statDone">0</div><div class="l">Complete</div></div>
   </div>
 
-  <div class="cat-progress-heading">Progress by Category</div>
+  <div class="cat-progress-heading-row">
+    <div class="cat-progress-heading">Progress by Category</div>
+    <button type="button" id="purgeBtn" class="purge-link">Purge Old Data</button>
+  </div>
   <div class="cat-progress" id="catProgress"></div>
 
   <form class="add-form" id="addForm">
@@ -387,6 +423,10 @@
       <div class="cal-tasks" id="calNoDateTasks"></div>
     </div>
   </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal" id="modalBox" role="dialog" aria-modal="true"></div>
 </div>
 
 <script>
@@ -656,7 +696,7 @@
       del.type = 'button';
       del.setAttribute('aria-label', 'Delete task');
       del.textContent = '✕';
-      del.addEventListener('click', () => removeItem(it.id));
+      del.addEventListener('click', () => confirmDelete(it.id));
 
       actions.appendChild(editBtn);
       actions.appendChild(del);
@@ -705,7 +745,7 @@
     del.type = 'button';
     del.setAttribute('aria-label', 'Delete task');
     del.textContent = '✕';
-    del.addEventListener('click', () => removeItem(it.id));
+    del.addEventListener('click', () => confirmDelete(it.id));
 
     row.appendChild(check);
     row.appendChild(text);
@@ -917,6 +957,97 @@
     }
   }
 
+  function removeItems(ids){
+    if(dbMode){
+      ids.forEach(id => db.collection('todos').doc(id).delete().catch(() => {}));
+    } else {
+      const idSet = new Set(ids);
+      items = items.filter(i => !idSet.has(i.id));
+      saveLocal();
+      render();
+    }
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  function openModal(html){
+    document.getElementById('modalBox').innerHTML = html;
+    document.getElementById('modalOverlay').hidden = false;
+  }
+
+  function closeModal(){
+    document.getElementById('modalOverlay').hidden = true;
+    document.getElementById('modalBox').innerHTML = '';
+  }
+
+  function confirmDelete(id){
+    const it = items.find(i => i.id === id);
+    if(!it) return;
+    openModal(
+      '<h3>Delete task?</h3>' +
+      '<p>&ldquo;' + escapeHtml(it.text) + '&rdquo; will be permanently deleted.</p>' +
+      '<div class="modal-actions">' +
+        '<button type="button" class="secondary" id="modalNo">No</button>' +
+        '<button type="button" class="danger" id="modalYes">Yes, delete</button>' +
+      '</div>'
+    );
+    document.getElementById('modalNo').addEventListener('click', closeModal);
+    document.getElementById('modalYes').addEventListener('click', () => {
+      removeItem(id);
+      closeModal();
+    });
+  }
+
+  function openPurgeStep1(){
+    openModal(
+      '<h3>Purge Old Data</h3>' +
+      '<p>Delete completed tasks with a completion date on or before:</p>' +
+      '<input type="date" id="purgeDateInput" value="' + todayStr() + '">' +
+      '<div class="modal-actions">' +
+        '<button type="button" class="secondary" id="modalCancel">Cancel</button>' +
+        '<button type="button" class="primary" id="modalNext">Next</button>' +
+      '</div>'
+    );
+    document.getElementById('modalCancel').addEventListener('click', closeModal);
+    document.getElementById('modalNext').addEventListener('click', () => {
+      const cutoff = document.getElementById('purgeDateInput').value;
+      if(!cutoff) return;
+      openPurgeStep2(cutoff);
+    });
+  }
+
+  function openPurgeStep2(cutoff){
+    const toDelete = items.filter(it => it.done && it.completedAt && it.completedAt.slice(0, 10) <= cutoff);
+
+    if(!toDelete.length){
+      openModal(
+        '<h3>Nothing to purge</h3>' +
+        '<p>No completed tasks found on or before ' + escapeHtml(cutoff) + '.</p>' +
+        '<div class="modal-actions"><button type="button" class="primary" id="modalOk">OK</button></div>'
+      );
+      document.getElementById('modalOk').addEventListener('click', closeModal);
+      return;
+    }
+
+    openModal(
+      '<h3>Confirm purge</h3>' +
+      '<p>This will permanently delete <strong>' + toDelete.length + '</strong> completed task(s) completed on or before <strong>' + escapeHtml(cutoff) + '</strong>. This cannot be undone.</p>' +
+      '<div class="modal-actions">' +
+        '<button type="button" class="secondary" id="modalBack">Back</button>' +
+        '<button type="button" class="danger" id="modalConfirmPurge">Delete ' + toDelete.length + '</button>' +
+      '</div>'
+    );
+    document.getElementById('modalBack').addEventListener('click', () => openPurgeStep1());
+    document.getElementById('modalConfirmPurge').addEventListener('click', () => {
+      removeItems(toDelete.map(it => it.id));
+      closeModal();
+    });
+  }
+
   function updateItem(id, patch){
     if(dbMode){
       db.collection('todos').doc(id).update(patch).catch(() => {});
@@ -979,6 +1110,15 @@
   document.getElementById('calToday').addEventListener('click', () => {
     weekStart = startOfWeek(new Date());
     render();
+  });
+
+  document.getElementById('purgeBtn').addEventListener('click', openPurgeStep1);
+
+  document.getElementById('modalOverlay').addEventListener('click', function(e){
+    if(e.target === this) closeModal();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && !document.getElementById('modalOverlay').hidden) closeModal();
   });
 
   function setSyncBadge(on){
