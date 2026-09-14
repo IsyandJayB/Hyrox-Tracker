@@ -200,6 +200,13 @@
     padding:13px 18px;font-weight:700;font-size:14.5px;cursor:pointer;white-space:nowrap;
   }
   form.add-form button:active{transform:scale(0.98);}
+  form.add-form button#aiParseBtn{
+    background:var(--bg);color:var(--ink);border:1px solid var(--line);
+    padding:13px 14px;font-size:16px;line-height:1;
+  }
+  form.add-form button#aiParseBtn:hover{border-color:var(--accent);}
+  form.add-form button#aiParseBtn:disabled{opacity:0.5;cursor:default;}
+  form.add-form button#aiParseBtn[hidden]{display:none;}
 
   .filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
   .filters button{
@@ -374,7 +381,7 @@
   <div class="cat-progress" id="catProgress"></div>
 
   <form class="add-form" id="addForm">
-    <input type="text" id="taskInput" placeholder="Add new to-do" autocomplete="off" required>
+    <input type="text" id="taskInput" placeholder="Add new to-do, or type naturally: &quot;pay condo fee tomorrow, urgent&quot;" autocomplete="off" required>
     <input type="text" id="categoryInput" list="categoryList" placeholder="Category" autocomplete="off">
     <datalist id="categoryList"></datalist>
     <select id="priorityInput" aria-label="Priority">
@@ -386,6 +393,7 @@
       <input type="date" id="dueDateInput" aria-label="Due date">
       <input type="time" id="dueTimeInput" aria-label="Due time">
     </div>
+    <button type="button" id="aiParseBtn" title="AI Quick Add — let AI fill category, priority, and date" hidden>✨</button>
     <button type="submit">Add</button>
   </form>
 
@@ -439,6 +447,7 @@
   let categoryFilter = 'all';
   let dbMode = false;
   let db = null;
+  let sampleFn = null;
   let editingId = null;
   let viewMode = 'list';
   let weekStart = startOfWeek(new Date());
@@ -1059,6 +1068,49 @@
     }
   }
 
+  async function aiParseTask(text){
+    const prompt =
+      'Today\'s date is ' + todayStr() + '. Parse this to-do into JSON only, no markdown, no preamble:\n' +
+      '"' + text + '"\n' +
+      'Return exactly: {"text": "...", "category": "a short category name, best guess", ' +
+      '"priority": "low|medium|high", "dueDate": "YYYY-MM-DD or empty string", "dueTime": "HH:MM 24-hour or empty string"}. ' +
+      'Clean up the task text by removing the date/priority words already captured into the other fields. ' +
+      'Respond in the same language as the input for the "text" and "category" fields.';
+    return await sampleFn.json(prompt, { modelTier: 'quick' });
+  }
+
+  document.getElementById('aiParseBtn').addEventListener('click', async function(){
+    if(!sampleFn) return;
+    const input = document.getElementById('taskInput');
+    const text = input.value.trim();
+    if(!text) return;
+
+    const btn = this;
+    const original = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '…';
+
+    try{
+      const parsed = await aiParseTask(text);
+      input.value = parsed.text || text;
+      document.getElementById('categoryInput').value = parsed.category || '';
+      document.getElementById('priorityInput').value = parsed.priority || 'medium';
+      document.getElementById('dueDateInput').value = parsed.dueDate || '';
+      document.getElementById('dueTimeInput').value = parsed.dueTime || '';
+      btn.textContent = original;
+    }catch(e){
+      console.error('AI parse failed', e);
+      if(e && e.code === 'not_granted'){
+        btn.hidden = true;
+      } else {
+        btn.textContent = '!';
+        setTimeout(() => { btn.textContent = original; }, 1500);
+      }
+    }finally{
+      btn.disabled = false;
+    }
+  });
+
   document.getElementById('addForm').addEventListener('submit', function(e){
     e.preventDefault();
     const input = document.getElementById('taskInput');
@@ -1149,6 +1201,16 @@
         loadLocal();
         render();
       });
+    }
+
+    try{
+      if(window.claude && typeof window.claude.use === 'function'){
+        sampleFn = await window.claude.use('sample');
+      }
+    }catch(e){ sampleFn = null; }
+
+    if(sampleFn){
+      document.getElementById('aiParseBtn').hidden = false;
     }
   }
 
