@@ -521,6 +521,8 @@
   let dbMode = false;
   let db = null;
   let sampleFn = null;
+  let downloadsFn = null;
+  let jsPdfLoadPromise = null;
   let editingId = null;
   let viewMode = 'list';
   let weekStart = startOfWeek(new Date());
@@ -919,6 +921,115 @@
       '<div class="report-range">' + rangeText.replace(/</g, '&lt;') + '</div>' +
       bodyHtml +
       '</body></html>';
+  }
+
+  function ensureJsPDFLoaded(){
+    if(window.jspdf && window.jspdf.jsPDF) return Promise.resolve();
+    if(jsPdfLoadPromise) return jsPdfLoadPromise;
+    jsPdfLoadPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      script.onload = () => resolve();
+      script.onerror = () => { jsPdfLoadPromise = null; reject(new Error('Failed to load PDF library')); };
+      document.head.appendChild(script);
+    });
+    return jsPdfLoadPromise;
+  }
+
+  function reportRowsForExport(){
+    const from = document.getElementById('reportFrom').value;
+    const to = document.getElementById('reportTo').value;
+    const inRange = items.filter(it => {
+      if(!it.done || !it.completedAt) return false;
+      const d = it.completedAt.slice(0, 10);
+      if(from && d < from) return false;
+      if(to && d > to) return false;
+      return true;
+    });
+    return inRange.filter(it => !reportExcludedCats.has(it.category));
+  }
+
+  function generateReportPdfBlob(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const marginX = 40;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const colX = [marginX, 150, 400];
+    let y = 50;
+
+    function ensureSpace(need){
+      if(y + need > pageHeight - 40){
+        doc.addPage();
+        y = 50;
+      }
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('Completed Tasks Report', marginX, y);
+    y += 18;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(110);
+    doc.text(document.getElementById('reportRangeLabel').textContent, marginX, y);
+    doc.setTextColor(20);
+    y += 26;
+
+    const completed = reportRowsForExport();
+    const cats = Array.from(new Set(completed.map(it => it.category))).sort((a, b) => a.localeCompare(b));
+
+    if(!cats.length){
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.text('No completed tasks in this selection.', marginX, y);
+    }
+
+    cats.forEach(cat => {
+      const rows = completed
+        .filter(it => it.category === cat)
+        .sort((a, b) => a.completedAt.localeCompare(b.completedAt));
+
+      ensureSpace(36);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text(cat + ' (' + rows.length + ')', marginX, y);
+      y += 16;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(110);
+      doc.text('COMPLETED', colX[0], y);
+      doc.text('TASK', colX[1], y);
+      doc.text('PLANNED DATE', colX[2], y);
+      y += 6;
+      doc.setDrawColor(220);
+      doc.line(marginX, y, pageWidth - marginX, y);
+      y += 14;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(20);
+
+      rows.forEach(it => {
+        const taskLines = doc.splitTextToSize(it.text, colX[2] - colX[1] - 10);
+        const rowHeight = Math.max(14, taskLines.length * 12);
+        ensureSpace(rowHeight + 6);
+
+        doc.text(formatCompleted(it.completedAt), colX[0], y);
+        doc.text(taskLines, colX[1], y);
+        doc.text(it.dueDate ? (it.dueDate + (it.dueTime ? ' ' + it.dueTime : '')) : '—', colX[2], y);
+
+        y += rowHeight;
+        doc.setDrawColor(240);
+        doc.line(marginX, y - 4, pageWidth - marginX, y - 4);
+        y += 4;
+      });
+
+      y += 18;
+    });
+
+    return doc.output('blob');
   }
 
   function buildReportSection(category, rows){
@@ -1420,8 +1531,41 @@
 
   document.getElementById('reportFrom').addEventListener('change', renderReport);
   document.getElementById('reportTo').addEventListener('change', renderReport);
-  document.getElementById('reportExportBtn').addEventListener('click', function(){
+  document.getElementById('reportExportBtn').addEventListener('click', async function(){
     const btn = this;
+    const original = btn.textContent;
+
+    function flash(msg, ms){
+      btn.textContent = msg;
+      setTimeout(() => { btn.textContent = original; }, ms || 2000);
+    }
+
+    if(downloadsFn){
+      btn.disabled = true;
+      btn.textContent = 'Preparing…';
+      try{
+        await ensureJsPDFLoaded();
+        const blob = generateReportPdfBlob();
+        const result = await downloadsFn.save({ filename: 'completed-tasks-report.pdf', data: blob });
+        flash(result.status === 'saved' ? 'Saved!' : 'Sent', 1500);
+      }catch(e){
+        console.error('PDF export failed', e);
+        if(e && e.code === 'declined'){
+          btn.textContent = original;
+        } else if(e && e.code === 'rate_limited'){
+          flash('Try again in a moment', 2000);
+        } else {
+          flash('Export failed', 2000);
+        }
+      }finally{
+        btn.disabled = false;
+      }
+      return;
+    }
+
+    // No downloads capability (e.g. this file opened standalone, outside
+    // the Artifact): fall back to opening a fresh window and printing it,
+    // which works fine for a normal top-level page.
     let win = null;
     try{ win = window.open('', '_blank'); }catch(e){ win = null; }
 
@@ -1438,15 +1582,10 @@
       }
     }
 
-    // Popup blocked, or printing a new window failed for some reason:
-    // fall back to printing this page directly, and tell the viewer why
-    // if that also seems unlikely to work (e.g. inside a restricted frame).
     try{
       window.print();
     }catch(e){
-      const original = btn.textContent;
-      btn.textContent = 'Allow pop-ups to export';
-      setTimeout(() => { btn.textContent = original; }, 2500);
+      flash('Allow pop-ups to export', 2500);
     }
   });
 
@@ -1496,6 +1635,12 @@
     if(sampleFn){
       document.getElementById('aiParseBtn').hidden = false;
     }
+
+    try{
+      if(window.claude && typeof window.claude.use === 'function'){
+        downloadsFn = await window.claude.use('downloads');
+      }
+    }catch(e){ downloadsFn = null; }
   }
 
   init();
