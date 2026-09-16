@@ -1072,11 +1072,19 @@
     const prompt =
       'Today\'s date is ' + todayStr() + '. Parse this to-do into JSON only, no markdown, no preamble:\n' +
       '"' + text + '"\n' +
-      'Return exactly: {"text": "...", "category": "a short category name, best guess", ' +
+      'Return exactly: {"text": "...", "category": "Work or Personal", ' +
       '"priority": "low|medium|high", "dueDate": "YYYY-MM-DD or empty string", "dueTime": "HH:MM 24-hour or empty string"}. ' +
+      'The "category" field must be exactly the literal string "Work" or the literal string "Personal" ' +
+      '(English, capitalized like that) — pick whichever fits best, never any other value. ' +
       'Clean up the task text by removing the date/priority words already captured into the other fields. ' +
-      'Respond in the same language as the input for the "text" and "category" fields.';
+      'Respond in the same language as the input for the "text" field only.';
     return await sampleFn.json(prompt, { modelTier: 'quick' });
+  }
+
+  function normalizeAiCategory(cat){
+    const key = String(cat || '').trim().toLowerCase();
+    if(key === 'work') return 'Work';
+    return 'Personal';
   }
 
   document.getElementById('aiParseBtn').addEventListener('click', async function(){
@@ -1093,7 +1101,7 @@
     try{
       const parsed = await aiParseTask(text);
       input.value = parsed.text || text;
-      document.getElementById('categoryInput').value = parsed.category || '';
+      document.getElementById('categoryInput').value = normalizeAiCategory(parsed.category);
       document.getElementById('priorityInput').value = parsed.priority || 'medium';
       document.getElementById('dueDateInput').value = parsed.dueDate || '';
       document.getElementById('dueTimeInput').value = parsed.dueTime || '';
