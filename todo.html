@@ -957,7 +957,7 @@
     cats.forEach(cat => {
       const rows = completed
         .filter(it => it.category === cat)
-        .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+        .sort((a, b) => a.completedAt.localeCompare(b.completedAt));
       body.appendChild(buildReportSection(cat, rows));
     });
   }
