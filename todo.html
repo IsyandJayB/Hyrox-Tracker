@@ -136,6 +136,11 @@
     background:var(--bg);color:var(--ink);font-size:14px;margin-bottom:16px;
     font-family:inherit;color-scheme:light dark;
   }
+  .modal-daterange{display:flex;gap:10px;}
+  .modal-daterange label{
+    flex:1;display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted);
+    text-transform:uppercase;letter-spacing:0.03em;font-weight:700;
+  }
   .modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
   .modal-actions button{
     border:none;border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;
@@ -1412,11 +1417,16 @@
     });
   }
 
-  function openPurgeStep1(){
+  function openPurgeStep1(prevFrom, prevTo){
+    const fromVal = prevFrom || '';
+    const toVal = prevTo || todayStr();
     openModal(
       '<h3>Purge Old Data</h3>' +
-      '<p>Delete completed tasks with a completion date on or before:</p>' +
-      '<input type="date" id="purgeDateInput" value="' + todayStr() + '">' +
+      '<p>Delete completed tasks with a completion date in this range:</p>' +
+      '<div class="modal-daterange">' +
+        '<label>From<input type="date" id="purgeFromInput" value="' + fromVal + '"></label>' +
+        '<label>To<input type="date" id="purgeToInput" value="' + toVal + '"></label>' +
+      '</div>' +
       '<div class="modal-actions">' +
         '<button type="button" class="secondary" id="modalCancel">Cancel</button>' +
         '<button type="button" class="primary" id="modalNext">Next</button>' +
@@ -1424,34 +1434,53 @@
     );
     document.getElementById('modalCancel').addEventListener('click', closeModal);
     document.getElementById('modalNext').addEventListener('click', () => {
-      const cutoff = document.getElementById('purgeDateInput').value;
-      if(!cutoff) return;
-      openPurgeStep2(cutoff);
+      const from = document.getElementById('purgeFromInput').value;
+      const to = document.getElementById('purgeToInput').value;
+      if(!from && !to) return;
+      openPurgeStep2(from, to);
     });
   }
 
-  function openPurgeStep2(cutoff){
-    const toDelete = items.filter(it => it.done && it.completedAt && it.completedAt.slice(0, 10) <= cutoff);
+  function formatPurgeRange(from, to){
+    if(from && to) return 'from ' + escapeHtml(from) + ' through ' + escapeHtml(to);
+    if(from) return 'on or after ' + escapeHtml(from);
+    return 'on or before ' + escapeHtml(to);
+  }
+
+  function openPurgeStep2(from, to){
+    const toDelete = items.filter(it => {
+      if(!it.done || !it.completedAt) return false;
+      const d = it.completedAt.slice(0, 10);
+      if(from && d < from) return false;
+      if(to && d > to) return false;
+      return true;
+    });
+
+    const rangeText = formatPurgeRange(from, to);
 
     if(!toDelete.length){
       openModal(
         '<h3>Nothing to purge</h3>' +
-        '<p>No completed tasks found on or before ' + escapeHtml(cutoff) + '.</p>' +
-        '<div class="modal-actions"><button type="button" class="primary" id="modalOk">OK</button></div>'
+        '<p>No completed tasks found ' + rangeText + '.</p>' +
+        '<div class="modal-actions">' +
+          '<button type="button" class="secondary" id="modalBack">Back</button>' +
+          '<button type="button" class="primary" id="modalOk">OK</button>' +
+        '</div>'
       );
+      document.getElementById('modalBack').addEventListener('click', () => openPurgeStep1(from, to));
       document.getElementById('modalOk').addEventListener('click', closeModal);
       return;
     }
 
     openModal(
       '<h3>Confirm purge</h3>' +
-      '<p>This will permanently delete <strong>' + toDelete.length + '</strong> completed task(s) completed on or before <strong>' + escapeHtml(cutoff) + '</strong>. This cannot be undone.</p>' +
+      '<p>This will permanently delete <strong>' + toDelete.length + '</strong> completed task(s) completed ' + rangeText + '. This cannot be undone.</p>' +
       '<div class="modal-actions">' +
         '<button type="button" class="secondary" id="modalBack">Back</button>' +
         '<button type="button" class="danger" id="modalConfirmPurge">Delete ' + toDelete.length + '</button>' +
       '</div>'
     );
-    document.getElementById('modalBack').addEventListener('click', () => openPurgeStep1());
+    document.getElementById('modalBack').addEventListener('click', () => openPurgeStep1(from, to));
     document.getElementById('modalConfirmPurge').addEventListener('click', () => {
       removeItems(toDelete.map(it => it.id));
       closeModal();
