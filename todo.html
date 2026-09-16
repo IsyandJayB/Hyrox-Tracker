@@ -949,86 +949,140 @@
     return inRange.filter(it => !reportExcludedCats.has(it.category));
   }
 
-  function generateReportPdfBlob(){
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-    const marginX = 40;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const colX = [marginX, 150, 400];
-    let y = 50;
-
-    function ensureSpace(need){
-      if(y + need > pageHeight - 40){
-        doc.addPage();
-        y = 50;
+  function wrapCanvasText(ctx, text, maxWidth){
+    const words = String(text).split(/\s+/).filter(Boolean);
+    const lines = [];
+    let cur = '';
+    words.forEach(w => {
+      const test = cur ? cur + ' ' + w : w;
+      if(cur && ctx.measureText(test).width > maxWidth){
+        lines.push(cur);
+        cur = w;
+      } else {
+        cur = test;
       }
-    }
+    });
+    lines.push(cur);
+    return lines.length ? lines : [''];
+  }
 
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
-    doc.text('Completed Tasks Report', marginX, y);
-    y += 18;
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(110);
-    doc.text(document.getElementById('reportRangeLabel').textContent, marginX, y);
-    doc.setTextColor(20);
-    y += 26;
+  function renderReportPages(){
+    // Render report pages onto <canvas> using the browser's own text
+    // engine (so Thai and any other script the page can already display
+    // renders correctly) instead of jsPDF's built-in fonts, which only
+    // cover Latin text and silently mangle anything else.
+    const scale = 2;
+    const pagePtW = 595, pagePtH = 842;
+    const pageW = pagePtW * scale, pageH = pagePtH * scale;
+    const marginPx = 40 * scale;
+    const contentBottom = pageH - 40 * scale;
+    const fontStack = '"Segoe UI", Tahoma, Arial, sans-serif';
 
     const completed = reportRowsForExport();
     const cats = Array.from(new Set(completed.map(it => it.category))).sort((a, b) => a.localeCompare(b));
 
-    if(!cats.length){
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(11);
-      doc.text('No completed tasks in this selection.', marginX, y);
+    const pages = [];
+    let canvas, ctx, y;
+
+    function freshCanvas(){
+      const c = document.createElement('canvas');
+      c.width = pageW;
+      c.height = pageH;
+      const c2 = c.getContext('2d');
+      c2.fillStyle = '#ffffff';
+      c2.fillRect(0, 0, pageW, pageH);
+      c2.fillStyle = '#141414';
+      c2.textBaseline = 'alphabetic';
+      return { c, c2 };
     }
+
+    function newPage(){
+      if(canvas) pages.push(canvas);
+      const fresh = freshCanvas();
+      canvas = fresh.c;
+      ctx = fresh.c2;
+      y = marginPx;
+    }
+
+    function ensureSpace(need){
+      if(y + need > contentBottom) newPage();
+    }
+
+    newPage();
+
+    ctx.font = 'bold ' + (16 * scale) + 'px ' + fontStack;
+    ctx.fillText('Completed Tasks Report', marginPx, y);
+    y += 22 * scale;
+
+    ctx.font = (11 * scale) + 'px ' + fontStack;
+    ctx.fillStyle = '#6b7280';
+    ctx.fillText(document.getElementById('reportRangeLabel').textContent, marginPx, y);
+    ctx.fillStyle = '#141414';
+    y += 30 * scale;
+
+    if(!cats.length){
+      ctx.font = (12 * scale) + 'px ' + fontStack;
+      ctx.fillText('No completed tasks in this selection.', marginPx, y);
+    }
+
+    const colX = [marginPx, marginPx + 110 * scale, marginPx + 340 * scale];
+    const taskColWidth = colX[2] - colX[1] - 12 * scale;
 
     cats.forEach(cat => {
       const rows = completed
         .filter(it => it.category === cat)
         .sort((a, b) => a.completedAt.localeCompare(b.completedAt));
 
-      ensureSpace(36);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
-      doc.text(cat + ' (' + rows.length + ')', marginX, y);
-      y += 16;
+      ensureSpace(40 * scale);
+      ctx.font = 'bold ' + (13 * scale) + 'px ' + fontStack;
+      ctx.fillText(cat + ' (' + rows.length + ')', marginPx, y);
+      y += 18 * scale;
 
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.setTextColor(110);
-      doc.text('COMPLETED', colX[0], y);
-      doc.text('TASK', colX[1], y);
-      doc.text('PLANNED DATE', colX[2], y);
-      y += 6;
-      doc.setDrawColor(220);
-      doc.line(marginX, y, pageWidth - marginX, y);
-      y += 14;
+      ctx.font = 'bold ' + (9 * scale) + 'px ' + fontStack;
+      ctx.fillStyle = '#6b7280';
+      ctx.fillText('COMPLETED', colX[0], y);
+      ctx.fillText('TASK', colX[1], y);
+      ctx.fillText('PLANNED DATE', colX[2], y);
+      y += 6 * scale;
+      ctx.strokeStyle = '#dddddd';
+      ctx.lineWidth = scale;
+      ctx.beginPath(); ctx.moveTo(marginPx, y); ctx.lineTo(pageW - marginPx, y); ctx.stroke();
+      y += 16 * scale;
 
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.setTextColor(20);
+      ctx.font = (10.5 * scale) + 'px ' + fontStack;
+      ctx.fillStyle = '#141414';
 
       rows.forEach(it => {
-        const taskLines = doc.splitTextToSize(it.text, colX[2] - colX[1] - 10);
-        const rowHeight = Math.max(14, taskLines.length * 12);
-        ensureSpace(rowHeight + 6);
+        const taskLines = wrapCanvasText(ctx, it.text, taskColWidth);
+        const rowHeight = Math.max(16 * scale, taskLines.length * 14 * scale);
+        ensureSpace(rowHeight + 8 * scale);
 
-        doc.text(formatCompleted(it.completedAt), colX[0], y);
-        doc.text(taskLines, colX[1], y);
-        doc.text(it.dueDate ? (it.dueDate + (it.dueTime ? ' ' + it.dueTime : '')) : '—', colX[2], y);
+        ctx.fillText(formatCompleted(it.completedAt), colX[0], y);
+        taskLines.forEach((line, i) => ctx.fillText(line, colX[1], y + i * 14 * scale));
+        ctx.fillText(it.dueDate ? (it.dueDate + (it.dueTime ? ' ' + it.dueTime : '')) : '—', colX[2], y);
 
         y += rowHeight;
-        doc.setDrawColor(240);
-        doc.line(marginX, y - 4, pageWidth - marginX, y - 4);
-        y += 4;
+        ctx.strokeStyle = '#eeeeee';
+        ctx.lineWidth = scale;
+        ctx.beginPath(); ctx.moveTo(marginPx, y - 4 * scale); ctx.lineTo(pageW - marginPx, y - 4 * scale); ctx.stroke();
+        y += 6 * scale;
       });
 
-      y += 18;
+      y += 18 * scale;
     });
 
+    pages.push(canvas);
+    return pages;
+  }
+
+  function generateReportPdfBlob(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pages = renderReportPages();
+    pages.forEach((canvas, i) => {
+      if(i > 0) doc.addPage();
+      doc.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, 595, 842);
+    });
     return doc.output('blob');
   }
 
