@@ -353,6 +353,46 @@
   .cal-nodate .cal-tasks{flex-direction:row;flex-wrap:wrap;}
   .cal-nodate .cal-task{flex:0 1 auto;max-width:220px;}
 
+  .report-header{margin-bottom:14px;}
+  .report-header h2{font-size:18px;font-weight:800;margin:0 0 4px;}
+  .report-range{font-size:12.5px;color:var(--muted);}
+  .report-controls{
+    display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow);
+  }
+  .report-controls label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.03em;font-weight:700;}
+  .report-controls input[type=date]{
+    padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);
+    font-size:13px;font-family:inherit;color-scheme:light dark;
+  }
+  .report-controls button{
+    background:var(--accent);color:var(--accent-ink);border:none;border-radius:10px;
+    padding:11px 16px;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap;
+  }
+  .report-section{margin-bottom:22px;}
+  .report-section h3{
+    display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;margin:0 0 8px;color:var(--ink);
+  }
+  .report-table-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);}
+  table.report-table{width:100%;border-collapse:collapse;font-size:13px;min-width:420px;}
+  table.report-table th{
+    text-align:left;padding:10px 12px;border-bottom:2px solid var(--line);
+    color:var(--muted);font-size:10.5px;text-transform:uppercase;letter-spacing:0.03em;font-weight:700;
+    white-space:nowrap;
+  }
+  table.report-table td{padding:9px 12px;border-bottom:1px solid var(--line);color:var(--ink);}
+  table.report-table tr:last-child td{border-bottom:none;}
+  table.report-table td:first-child, table.report-table th:first-child{white-space:nowrap;font-variant-numeric:tabular-nums;}
+
+  @media print{
+    .wrap > *:not(#reportView){display:none !important;}
+    #reportView{display:block !important;}
+    .report-controls{display:none !important;}
+    .modal-overlay{display:none !important;}
+    body{background:#fff;}
+    table.report-table{font-size:11px;}
+  }
+
   @media (prefers-reduced-motion: reduce){
     form.add-form button, .check{transition:none;}
   }
@@ -409,6 +449,7 @@
   <div class="view-switch">
     <button type="button" class="active" data-view="list">List</button>
     <button type="button" data-view="week">Week</button>
+    <button type="button" data-view="report">Report</button>
   </div>
 
   <ul class="list" id="list"></ul>
@@ -430,6 +471,23 @@
       <h3>No due date</h3>
       <div class="cal-tasks" id="calNoDateTasks"></div>
     </div>
+  </div>
+
+  <div class="report" id="reportView" hidden>
+    <div class="report-header">
+      <h2>Completed Tasks Report</h2>
+      <div class="report-range" id="reportRangeLabel"></div>
+    </div>
+    <div class="report-controls">
+      <label>From
+        <input type="date" id="reportFrom">
+      </label>
+      <label>To
+        <input type="date" id="reportTo">
+      </label>
+      <button type="button" id="reportExportBtn">Export PDF</button>
+    </div>
+    <div id="reportBody"></div>
   </div>
 </div>
 
@@ -555,15 +613,21 @@
     const listEl = document.getElementById('list');
     const emptyMsg = document.getElementById('emptyMsg');
     const calendarView = document.getElementById('calendarView');
+    const reportView = document.getElementById('reportView');
+
+    listEl.style.display = 'none';
+    emptyMsg.style.display = 'none';
+    calendarView.hidden = true;
+    reportView.hidden = true;
 
     if(viewMode === 'week'){
-      listEl.style.display = 'none';
-      emptyMsg.style.display = 'none';
       calendarView.hidden = false;
       renderCalendar();
+    } else if(viewMode === 'report'){
+      reportView.hidden = false;
+      renderReport();
     } else {
       listEl.style.display = '';
-      calendarView.hidden = true;
       renderList();
     }
   }
@@ -810,6 +874,92 @@
     const noDateItems = visible.filter(it => !it.dueDate);
     document.getElementById('calNoDate').style.display = noDateItems.length ? '' : 'none';
     noDateItems.forEach(it => noDateWrap.appendChild(buildCalTask(it)));
+  }
+
+  function formatReportDate(dateStr){
+    if(!dateStr) return '';
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function buildReportSection(category, rows){
+    const section = document.createElement('div');
+    section.className = 'report-section';
+
+    const heading = document.createElement('h3');
+    const dot = document.createElement('span');
+    dot.className = 'cat-dot ' + categoryTagClass(category);
+    heading.appendChild(dot);
+    heading.appendChild(document.createTextNode(category + ' (' + rows.length + ')'));
+    section.appendChild(heading);
+
+    const tableWrap = document.createElement('div');
+    tableWrap.className = 'report-table-wrap';
+
+    const table = document.createElement('table');
+    table.className = 'report-table';
+    table.innerHTML = '<thead><tr><th>Completed</th><th>Task</th><th>Planned Date</th></tr></thead>';
+
+    const tbody = document.createElement('tbody');
+    rows.forEach(it => {
+      const tr = document.createElement('tr');
+
+      const tdCompleted = document.createElement('td');
+      tdCompleted.textContent = formatCompleted(it.completedAt);
+
+      const tdTask = document.createElement('td');
+      tdTask.textContent = it.text;
+
+      const tdPlanned = document.createElement('td');
+      tdPlanned.textContent = it.dueDate ? (it.dueDate + (it.dueTime ? ' ' + it.dueTime : '')) : '—';
+
+      tr.appendChild(tdCompleted);
+      tr.appendChild(tdTask);
+      tr.appendChild(tdPlanned);
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    tableWrap.appendChild(table);
+    section.appendChild(tableWrap);
+    return section;
+  }
+
+  function renderReport(){
+    const from = document.getElementById('reportFrom').value;
+    const to = document.getElementById('reportTo').value;
+
+    const rangeLabel = document.getElementById('reportRangeLabel');
+    if(from && to) rangeLabel.textContent = formatReportDate(from) + ' – ' + formatReportDate(to);
+    else if(from) rangeLabel.textContent = 'From ' + formatReportDate(from);
+    else if(to) rangeLabel.textContent = 'Through ' + formatReportDate(to);
+    else rangeLabel.textContent = 'All time';
+
+    const completed = items.filter(it => {
+      if(!it.done || !it.completedAt) return false;
+      const d = it.completedAt.slice(0, 10);
+      if(from && d < from) return false;
+      if(to && d > to) return false;
+      return true;
+    });
+
+    const body = document.getElementById('reportBody');
+    body.innerHTML = '';
+
+    if(!completed.length){
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = 'No completed tasks in this date range.';
+      body.appendChild(empty);
+      return;
+    }
+
+    const cats = Array.from(new Set(completed.map(it => it.category))).sort((a, b) => a.localeCompare(b));
+    cats.forEach(cat => {
+      const rows = completed
+        .filter(it => it.category === cat)
+        .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+      body.appendChild(buildReportSection(cat, rows));
+    });
   }
 
   function buildEditForm(it){
@@ -1173,6 +1323,20 @@
   });
 
   document.getElementById('purgeBtn').addEventListener('click', openPurgeStep1);
+
+  (function initReportDefaults(){
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - 30);
+    document.getElementById('reportFrom').value = fmtDateStr(from);
+    document.getElementById('reportTo').value = fmtDateStr(to);
+  })();
+
+  document.getElementById('reportFrom').addEventListener('change', renderReport);
+  document.getElementById('reportTo').addEventListener('change', renderReport);
+  document.getElementById('reportExportBtn').addEventListener('click', function(){
+    window.print();
+  });
 
   document.getElementById('modalOverlay').addEventListener('click', function(e){
     if(e.target === this) closeModal();
