@@ -1895,6 +1895,18 @@
     badge.className = 'sync-badge ' + (on ? 'on' : 'off');
   }
 
+  let dataReady = false;
+  let sampleReady = false;
+
+  function maybeGenerateDailyBrief(){
+    // Only ask for a daily brief once we know BOTH that sample is
+    // available and that `items` holds the real, final data for this
+    // view (the local seed data until a db snapshot, if any, arrives) —
+    // otherwise it can summarize stale placeholder tasks instead of the
+    // viewer's actual ones.
+    if(dataReady && sampleReady && sampleFn) generateDailyBrief(false);
+  }
+
   async function init(){
     loadLocal();
     render();
@@ -1908,15 +1920,26 @@
     if(db){
       dbMode = true;
       setSyncBadge(true);
+      let firstSnapshot = true;
       db.collection('todos').onSnapshot(function(snap){
         items = snap.docs.map(function(d){ return normalize(Object.assign({ id: d.id }, d.data())); });
         render();
+        if(firstSnapshot){
+          firstSnapshot = false;
+          dataReady = true;
+          maybeGenerateDailyBrief();
+        }
       }, function(){
         dbMode = false;
         setSyncBadge(false);
         loadLocal();
         render();
+        dataReady = true;
+        maybeGenerateDailyBrief();
       });
+    } else {
+      // No db capability: loadLocal() above already holds the final data.
+      dataReady = true;
     }
 
     try{
@@ -1924,12 +1947,13 @@
         sampleFn = await window.claude.use('sample');
       }
     }catch(e){ sampleFn = null; }
+    sampleReady = true;
 
     if(sampleFn){
       document.getElementById('aiParseBtn').hidden = false;
       document.getElementById('reportSummarizeBtn').hidden = false;
       document.getElementById('dailyBrief').hidden = false;
-      generateDailyBrief(false);
+      maybeGenerateDailyBrief();
     }
 
     try{
