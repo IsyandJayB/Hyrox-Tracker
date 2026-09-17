@@ -374,6 +374,13 @@
     background:var(--accent);color:var(--accent-ink);border:none;border-radius:10px;
     padding:11px 16px;font-weight:700;font-size:13.5px;cursor:pointer;white-space:nowrap;
   }
+  .report-controls button#reportSummarizeBtn{
+    background:var(--bg);color:var(--ink);border:1px solid var(--line);
+  }
+  .report-controls button#reportSummarizeBtn:hover{border-color:var(--accent);}
+  .report-controls button#reportSummarizeBtn:disabled{opacity:0.6;cursor:default;}
+  .report-controls button#reportSummarizeBtn[hidden]{display:none;}
+  .summary-text{white-space:pre-line;}
   .report-cat-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;}
   .report-cat-filter button{
     display:flex;align-items:center;gap:6px;
@@ -504,6 +511,7 @@
       <label>To
         <input type="date" id="reportTo">
       </label>
+      <button type="button" id="reportSummarizeBtn" hidden>✨ Summarize</button>
       <button type="button" id="reportExportBtn">Export PDF</button>
     </div>
     <div class="report-cat-filter" id="reportCatFilter"></div>
@@ -952,6 +960,64 @@
       return true;
     });
     return inRange.filter(it => !reportExcludedCats.has(it.category));
+  }
+
+  function gatherSummaryStats(){
+    const from = document.getElementById('reportFrom').value;
+    const to = document.getElementById('reportTo').value;
+    const completed = reportRowsForExport();
+
+    // "Planned in this period": any task (done or not) with a due date
+    // inside the same range and a category the viewer hasn't excluded —
+    // gives a real planned-vs-completed ratio using existing fields,
+    // rather than a number the model would have to invent.
+    const planned = items.filter(it => {
+      if(!it.dueDate) return false;
+      if(from && it.dueDate < from) return false;
+      if(to && it.dueDate > to) return false;
+      if(reportExcludedCats.has(it.category)) return false;
+      return true;
+    });
+
+    const priorityCounts = { high: 0, medium: 0, low: 0 };
+    completed.forEach(it => { priorityCounts[it.priority] = (priorityCounts[it.priority] || 0) + 1; });
+
+    const categoryCounts = {};
+    completed.forEach(it => { categoryCounts[it.category] = (categoryCounts[it.category] || 0) + 1; });
+
+    const latenessDays = [];
+    completed.forEach(it => {
+      if(!it.dueDate) return;
+      const due = new Date(it.dueDate + 'T' + (it.dueTime || '23:59') + ':00');
+      const done = new Date(it.completedAt);
+      if(isNaN(due.getTime()) || isNaN(done.getTime())) return;
+      latenessDays.push((done - due) / 86400000);
+    });
+    const avgLatenessDays = latenessDays.length
+      ? Math.round((latenessDays.reduce((a, b) => a + b, 0) / latenessDays.length) * 10) / 10
+      : null;
+
+    return {
+      dateRangeLabel: document.getElementById('reportRangeLabel').textContent,
+      totalCompleted: completed.length,
+      plannedInRange: planned.length,
+      completedOfPlanned: planned.filter(it => it.done).length,
+      priorityCounts,
+      categoryCounts,
+      avgDaysLateWhenCompleted: avgLatenessDays,
+      taskTitles: completed.slice(0, 40).map(it => it.text)
+    };
+  }
+
+  function buildSummaryPrompt(stats){
+    return 'You are summarizing a personal to-do list report for its owner. ' +
+      'Here is aggregate data (already computed correctly — use these exact numbers, never recompute or invent new ones):\n\n' +
+      JSON.stringify(stats, null, 2) + '\n\n' +
+      'Write a short summary, 2-4 sentences, in a natural human tone (like a friendly weekly recap, not a data dump). ' +
+      'Mention: how many tasks were completed (and out of how many were planned in this period, if that number is meaningful), ' +
+      'the priority mix if it stands out, and whether tasks tended to finish early/on time/late (avgDaysLateWhenCompleted: positive = late, negative = early, null = not enough data — omit this point if null). ' +
+      'Respond in the same language as the task titles listed (Thai if they are mostly Thai, English otherwise). ' +
+      'No markdown, no bullet points, just plain prose.';
   }
 
   function wrapCanvasText(ctx, text, maxWidth){
@@ -1614,6 +1680,51 @@
 
   document.getElementById('reportFrom').addEventListener('change', renderReport);
   document.getElementById('reportTo').addEventListener('change', renderReport);
+
+  document.getElementById('reportSummarizeBtn').addEventListener('click', async function(){
+    if(!sampleFn) return;
+    const btn = this;
+    const original = btn.textContent;
+
+    const stats = gatherSummaryStats();
+    if(!stats.totalCompleted){
+      openModal(
+        '<h3>Nothing to summarize</h3>' +
+        '<p>No completed tasks in the current selection.</p>' +
+        '<div class="modal-actions"><button type="button" class="primary" id="modalOk">OK</button></div>'
+      );
+      document.getElementById('modalOk').addEventListener('click', closeModal);
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Thinking…';
+    try{
+      const result = await sampleFn(buildSummaryPrompt(stats), { modelTier: 'quick' });
+      openModal(
+        '<h3>Summary</h3>' +
+        '<p class="summary-text">' + escapeHtml(result.text) + '</p>' +
+        '<div class="modal-actions"><button type="button" class="primary" id="modalOk">OK</button></div>'
+      );
+      document.getElementById('modalOk').addEventListener('click', closeModal);
+    }catch(e){
+      console.error('Summarize failed', e);
+      if(e && e.code === 'not_granted'){
+        btn.hidden = true;
+      } else {
+        openModal(
+          '<h3>Couldn’t summarize</h3>' +
+          '<p>Something went wrong generating the summary. Please try again.</p>' +
+          '<div class="modal-actions"><button type="button" class="primary" id="modalOk">OK</button></div>'
+        );
+        document.getElementById('modalOk').addEventListener('click', closeModal);
+      }
+    }finally{
+      btn.disabled = false;
+      btn.textContent = original;
+    }
+  });
+
   document.getElementById('reportExportBtn').addEventListener('click', async function(){
     const btn = this;
     const original = btn.textContent;
@@ -1717,6 +1828,7 @@
 
     if(sampleFn){
       document.getElementById('aiParseBtn').hidden = false;
+      document.getElementById('reportSummarizeBtn').hidden = false;
     }
 
     try{
