@@ -235,6 +235,23 @@
   form.add-form button#aiParseBtn:hover{border-color:var(--accent);}
   form.add-form button#aiParseBtn:disabled{opacity:0.5;cursor:default;}
   form.add-form button#aiParseBtn[hidden]{display:none;}
+  form.add-form button#micBtn{
+    background:var(--bg);color:var(--ink);border:1px solid var(--line);
+    padding:13px 14px;font-size:16px;line-height:1;
+  }
+  form.add-form button#micBtn:hover{border-color:var(--accent);}
+  form.add-form button#micBtn[hidden]{display:none;}
+  form.add-form button#micBtn.listening{
+    background:var(--danger);color:#ffffff;border-color:var(--danger);
+    animation:mic-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes mic-pulse{
+    0%, 100%{box-shadow:0 0 0 0 rgba(226,83,74,0.45);}
+    50%{box-shadow:0 0 0 8px rgba(226,83,74,0);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    form.add-form button#micBtn.listening{animation:none;}
+  }
 
   .filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
   .filters button{
@@ -477,6 +494,7 @@
 
   <form class="add-form" id="addForm">
     <input type="text" id="taskInput" placeholder="Add new to-do, or type naturally: &quot;pay condo fee tomorrow, urgent&quot;" autocomplete="off" required>
+    <button type="button" id="micBtn" title="Add by voice" hidden>🎤</button>
     <input type="text" id="categoryInput" list="categoryList" placeholder="Category" autocomplete="off">
     <datalist id="categoryList"></datalist>
     <select id="priorityInput" aria-label="Priority">
@@ -1810,6 +1828,52 @@
       btn.disabled = false;
     }
   });
+
+  // ---- Add task by voice (Web Speech API — on-device, no capability needed) ----
+  (function setupVoiceInput(){
+    const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micBtn = document.getElementById('micBtn');
+    if(!SpeechRecognitionCtor) return;
+
+    const recognition = new SpeechRecognitionCtor();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = navigator.language || 'en-US';
+    let isListening = false;
+
+    recognition.addEventListener('start', () => {
+      isListening = true;
+      micBtn.classList.add('listening');
+    });
+
+    recognition.addEventListener('result', (e) => {
+      const transcript = Array.from(e.results).map(r => r[0].transcript).join(' ').trim();
+      if(!transcript) return;
+      const input = document.getElementById('taskInput');
+      input.value = input.value.trim() ? input.value.trim() + ' ' + transcript : transcript;
+    });
+
+    recognition.addEventListener('error', (e) => {
+      console.error('Speech recognition error', e.error);
+      if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+        micBtn.hidden = true;
+      }
+    });
+
+    recognition.addEventListener('end', () => {
+      isListening = false;
+      micBtn.classList.remove('listening');
+    });
+
+    micBtn.hidden = false;
+    micBtn.addEventListener('click', () => {
+      if(isListening){
+        recognition.stop();
+        return;
+      }
+      try{ recognition.start(); }catch(e){ console.error('Could not start speech recognition', e); }
+    });
+  })();
 
   document.getElementById('addForm').addEventListener('submit', function(e){
     e.preventDefault();
